@@ -37,31 +37,51 @@ static int handle_events(t_env *env)
 	{
 		env->cam.pos_x +=
 			(env->map
-			[(int)env->cam.pos_y][(int)(env->cam.pos_x + env->mid_dir_x * D_PAS)]
-			== 0 ? D_PAS * env->mid_dir_x : 0);
+			[(int)env->cam.pos_y][(int)(env->cam.pos_x + env->dir_x * D_PAS)]
+			== 0 ? D_PAS * env->dir_x : 0);
 		env->cam.pos_y +=
 			(env->map
-			[(int)(env->cam.pos_y + env->mid_dir_y * D_PAS)][(int)env->cam.pos_x]
-			== 0 ? D_PAS * env->mid_dir_y : 0);
+			[(int)(env->cam.pos_y + env->dir_y * D_PAS)][(int)env->cam.pos_x]
+			== 0 ? D_PAS * env->dir_y : 0);
 			act = 1;
 	}
 	if (env->key[SDL_SCANCODE_S] == 1)
 	{
 		env->cam.pos_x -=
 			(env->map
-			[(int)env->cam.pos_y][(int)(env->cam.pos_x - env->mid_dir_x * D_PAS)]
-			== 0 ? D_PAS * env->mid_dir_x : 0);
+			[(int)env->cam.pos_y][(int)(env->cam.pos_x - env->dir_x * D_PAS)]
+			== 0 ? D_PAS * env->dir_x : 0);
 		env->cam.pos_y -=
 			(env->map
-			[(int)(env->cam.pos_y - env->mid_dir_y * D_PAS)][(int)env->cam.pos_x]
-			== 0 ? D_PAS * env->mid_dir_y: 0);
+			[(int)(env->cam.pos_y - env->dir_y * D_PAS)][(int)env->cam.pos_x]
+			== 0 ? D_PAS * env->dir_y: 0);
 			act = 1;
 	}
-	if (env->key[SDLK_a] == 1)
-		env->cam.pos_y -= D_PAS;
-	if (env->key[SDLK_d] == 1)
-		env->cam.pos_y += D_PAS;
-	if (env->key[SDL_SCANCODE_E] == 1)
+	if (env->key[SDL_SCANCODE_D] == 1)
+	{
+		env->cam.pos_x +=
+			(env->map
+			[(int)env->cam.pos_y][(int)(env->cam.pos_x + env->plane_x * D_PAS)]
+			== 0 ? D_PAS * env->plane_x : 0);
+		env->cam.pos_y +=
+			(env->map
+			[(int)(env->cam.pos_y + env->plane_y * D_PAS)][(int)env->cam.pos_x]
+			== 0 ? D_PAS * env->plane_y : 0);
+			act = 1;
+	}
+	if (env->key[SDL_SCANCODE_A] == 1)
+	{
+		env->cam.pos_x -=
+			(env->map
+			[(int)env->cam.pos_y][(int)(env->cam.pos_x - env->plane_x * D_PAS)]
+			== 0 ? D_PAS * env->plane_x : 0);
+		env->cam.pos_y -=
+			(env->map
+			[(int)(env->cam.pos_y - env->plane_y * D_PAS)][(int)env->cam.pos_x]
+			== 0 ? D_PAS * env->plane_y: 0);
+			act = 1;
+	}
+	if (env->key[SDL_SCANCODE_RIGHT] == 1)
 	{
 		env->old_dir_x = env->dir_x;
 		env->dir_x = env->dir_x * cos(-R_PAS)
@@ -75,7 +95,7 @@ static int handle_events(t_env *env)
 						+ env->plane_y * cos(-R_PAS);
 			act = 1;
 	}
-	if (env->key[SDL_SCANCODE_Q] == 1)
+	if (env->key[SDL_SCANCODE_LEFT] == 1)
 	{
 		env->old_dir_x = env->dir_x;
 		env->dir_x = env->dir_x * cos(R_PAS)
