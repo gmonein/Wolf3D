@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <math.h>
+#include <pthread.h>
 
 /*
 ** -------------------------- Internal Libraries -------------------------------
@@ -42,5 +43,8 @@
 int		**parsing(char *str);
 void	ray_trace(t_env *e);
 void	px2img(SDL_Renderer *render, int clr, int x, int y);
-int		raycast(t_env *env);
+int		raycast(t_env *env, int start, int end);
+int		get_pixel(SDL_Surface *src, int x, int y);
+pthread_t			**malloc_thread(int count);
+void				redraw(t_env *env);
 #endif /* rt_h */

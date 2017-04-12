@@ -4,35 +4,35 @@
 
 typedef struct		s_pos
 {
-	double			x;
-	double			y;
+	float			x;
+	float			y;
 }					t_pos;
 
 typedef struct		s_vector_inc
 {
-	double			dx;
-	double			dy;
-	double			dif;
+	float			dx;
+	float			dy;
+	float			dif;
 }					t_vector_inc;
 
 typedef struct		s_ray
 {
-	double			cam_x;
-	double			pos_x;
-	double			pos_y;
-	double			map_x;
-	double			map_y;
-	double			dir_x;
-	double			dir_y;
-	double			plane_x;
-	double			plane_y;
-	double			side_x;
-	double			side_y;
-	double			wall_dist;
-	double			step_x;
-	double			step_y;
-	double			delta_dist_x;
-	double			delta_dist_y;
+	float			cam_x;
+	float			pos_x;
+	float			pos_y;
+	float			map_x;
+	float			map_y;
+	float			dir_x;
+	float			dir_y;
+	float			plane_x;
+	float			plane_y;
+	float			side_x;
+	float			side_y;
+	float			wall_dist;
+	float			step_x;
+	float			step_y;
+	float			delta_dist_x;
+	float			delta_dist_y;
 	int				hit;
 	int				side;
 	int				line_height;
@@ -56,7 +56,7 @@ t_vector_inc		set_vector_by_y(t_vector_inc vec)
 
 void	set_ray(t_env *env, t_ray *ray, int x)
 {
-	ray->cam_x = 2 * x / (double)WIN_W - 1;
+	ray->cam_x = 2 * x / (float)WIN_W - 1;
 	ray->pos_x = env->cam.pos_x;
 	ray->pos_y = env->cam.pos_y;
 	ray->dir_x = env->dir_x + ray->plane_x * ray->cam_x;
@@ -135,35 +135,75 @@ void	get_wall_inf(t_env *env, t_ray *ray)
 	ray->line_height = (int)(WIN_H / ray->wall_dist);
 	ray->draw_start = -ray->line_height / 2 + (int)WIN_H / 2;
 	ray->draw_end = ray->line_height / 2 + (int)WIN_H / 2;
+	if (ray->draw_start < 0)
+		ray->draw_start = 0;
+	if (ray->draw_end >= (int)WIN_H)
+		ray->draw_end = (int)WIN_H - 1;
 }
 
 void	print_wall_uni(t_env *env, t_ray *ray, int x)
 {
 	char	*col;
 
-	if (ray->draw_start < 0)
-		ray->draw_start = 0;
-	if (ray->draw_end >= (int)WIN_H)
-		ray->draw_end = (int)WIN_H - 1;
 	col = (char *)&env->color[env->pal][ray->side];
 	SDL_SetRenderDrawColor(env->render,
 		col[0], col[1], col[2], SDL_ALPHA_OPAQUE);
 	SDL_RenderDrawLine(env->render, x, ray->draw_start, x, ray->draw_end);
-	col = (char *)&env->color[env->pal][4];
-	SDL_SetRenderDrawColor(env->render,
-		col[0], col[1], col[2], SDL_ALPHA_OPAQUE);
-	SDL_RenderDrawLine(env->render, x, ray->draw_end, x, WIN_H - 1);
+}
+
+void	print_wall_text(t_env *env, t_ray *ray, int x)
+{
+	float		wallx;
+	int			textx;
+	int			y;
+	int			d;
+	int			texty;
+	int			color;
+
+	if (ray->side & 1 == 0)
+		wallx = ray->pos_y + ray->wall_dist * ray->dir_y;
+	else
+		wallx = ray->pos_x + ray->wall_dist * ray->dir_x;
+	wallx -= floor(wallx);
+	textx = (int)(wallx * (float)(env->bmp->w));
+	if (ray->side & 1 == 0 && ray->dir_x > 0)
+		textx = env->bmp->w - textx - 1;
+	if (ray->side & 1 == 1 && ray->dir_y < 0)
+		textx = env->bmp->w - textx - 1;
+	y = ray->draw_start - 1;
+	while (++y < ray->draw_end)
+	{
+		d = (y << 8) - ((int)WIN_H << 7)
+			+ (int)ray->line_height * 128;
+		texty = (int)((d * env->bmp->h) / ray->line_height) >> 8;
+		color = get_pixel(env->bmp, textx, texty);
+//		if (ray->side & 1 == 1)
+//			color = (color >> 1) & 8355711;
+		px2img(env->render, color, x, y);
+	}
+}
+
+void	draw_floor(t_env *env, t_ray *ray, int x)
+{
+	char	*col;
+
 	col = (char *)&env->color[env->pal][5];
 	SDL_SetRenderDrawColor(env->render,
 		col[0], col[1], col[2], SDL_ALPHA_OPAQUE);
 	SDL_RenderDrawLine(env->render, x, 0, x, ray->draw_start);
 }
 
-void	print_wall_text(t_env *env, t_ray *ray, int x)
+void	draw_sol(t_env *env, t_ray *ray, int x)
 {
+	char	*col;
+
+	col = (char *)&env->color[env->pal][4];
+	SDL_SetRenderDrawColor(env->render,
+		col[0], col[1], col[2], SDL_ALPHA_OPAQUE);
+	SDL_RenderDrawLine(env->render, x, ray->draw_end, x, WIN_H - 1);
 }
 
-int		raycast(t_env *env)
+int		raycast(t_env *env, int start, int end)
 {
 	t_ray	ray;
 	int		x;
@@ -171,16 +211,18 @@ int		raycast(t_env *env)
 
 	ray.plane_x = env->plane_x;
 	ray.plane_y = env->plane_y;
-	x = -1;
-	while (++x < WIN_W)
+	x = start - 1;
+	while (++x < end)
 	{
 		set_ray(env, &ray, x);
 		set_raystep(env, &ray);
 		ray.hit = launch_ray(env, &ray);
 		get_wall_inf(env, &ray);
-		if (ray.hit != 1 && env->text == 1)
+		if (ray.hit == 2 && env->text == 1)
 			print_wall_text(env, &ray, x);
 		else
 			print_wall_uni(env, &ray, x);
+		draw_floor(env, &ray, x);
+		draw_sol(env, &ray, x);
 	}
 }

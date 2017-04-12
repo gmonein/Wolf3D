@@ -2,14 +2,30 @@
 #ifndef STRUCTURES_H
 # define STRUCTURES_H
 
+typedef struct		s_args
+{
+	struct s_env	*env;
+	int				start;
+	int				end;
+	int				done;
+}					t_args;
+
+typedef struct		s_argb
+{
+	unsigned char	b;
+	unsigned char	g;
+	unsigned char	r;
+	unsigned char	a;
+}					t_argb;
+
 typedef struct		s_player
 {
-	double			axe;
-	double			cam_x;
-	double			pos_x;
-	double			pos_y;
-	double			ray_x;
-	double			ray_y;
+	float			axe;
+	float			cam_x;
+	float			pos_x;
+	float			pos_y;
+	float			ray_x;
+	float			ray_y;
 }					t_player;
 
 typedef struct		s_env
@@ -21,17 +37,19 @@ typedef struct		s_env
 	SDL_Surface		*bmp;
 	SDL_Renderer	*render;
 	SDL_Texture		*texture;
+	pthread_t		**thread;
+	int				thread_cnt;
 	int				pal;
 	int				text;
 	int				**map;
-	double			dir_x;
-	double			old_dir_x;
-	double			dir_y;
-	double			mid_dir_x;
-	double			mid_dir_y;
-	double			plane_x;
-	double			old_plane_x;
-	double			plane_y;
+	float			dir_x;
+	float			old_dir_x;
+	float			dir_y;
+	float			mid_dir_x;
+	float			mid_dir_y;
+	float			plane_x;
+	float			old_plane_x;
+	float			plane_y;
 	t_player		cam;
     short			redraw;
     char			run;

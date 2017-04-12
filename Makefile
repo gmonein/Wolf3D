@@ -2,13 +2,14 @@ NAME = Wolf3D
 
 CPP = gcc
 CFLAGS = -O3 -fsanitize=address
-SDLFLAGS = -lSDL2-2.0
+SDLFLAGS = -lSDL2-2.0 -lpthread
 HEADER = includes
 SOURCES = main.c \
 		parsing.c \
 		raycast.c \
 		filler.c \
-		ft_fill_area.c
+		ft_fill_area.c \
+		thread.c
 DIR_O = obj
 DIR_S = srcs
 
