@@ -38,6 +38,7 @@ typedef struct		s_env
 	SDL_Renderer	*render;
 	SDL_Texture		*texture;
 	pthread_t		**thread;
+	t_args			*args;
 	int				thread_cnt;
 	int				pal;
 	int				text;

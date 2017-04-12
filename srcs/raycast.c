@@ -160,25 +160,25 @@ void	print_wall_text(t_env *env, t_ray *ray, int x)
 	int			texty;
 	int			color;
 
-	if (ray->side & 1 == 0)
+	if (ray->side == 0 || ray->side == 2)
 		wallx = ray->pos_y + ray->wall_dist * ray->dir_y;
 	else
 		wallx = ray->pos_x + ray->wall_dist * ray->dir_x;
 	wallx -= floor(wallx);
 	textx = (int)(wallx * (float)(env->bmp->w));
-	if (ray->side & 1 == 0 && ray->dir_x > 0)
+	if ((ray->side == 0 || ray->side == 2) && ray->dir_x > 0)
 		textx = env->bmp->w - textx - 1;
-	if (ray->side & 1 == 1 && ray->dir_y < 0)
+	if ((ray->side == 1 || ray->side == 3) && ray->dir_y < 0)
 		textx = env->bmp->w - textx - 1;
 	y = ray->draw_start - 1;
 	while (++y < ray->draw_end)
 	{
 		d = (y << 8) - ((int)WIN_H << 7)
-			+ (int)ray->line_height * 128;
-		texty = (int)((d * env->bmp->h) / ray->line_height) >> 8;
+			+ ((int)ray->line_height << 7);
+		texty = ((d * env->bmp->h) / ray->line_height) / 256;
 		color = get_pixel(env->bmp, textx, texty);
-//		if (ray->side & 1 == 1)
-//			color = (color >> 1) & 8355711;
+		if (ray->side & 1 == 1)
+			color = (color >> 1) & 8355711;
 		px2img(env->render, color, x, y);
 	}
 }

@@ -1,7 +1,7 @@
 NAME = Wolf3D
 
 CPP = gcc
-CFLAGS = -O3 -fsanitize=address
+CFLAGS = -O3
 SDLFLAGS = -lSDL2-2.0 -lpthread
 HEADER = includes
 SOURCES = main.c \
