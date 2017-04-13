@@ -6,21 +6,9 @@
 
 int	SDL_EnableKeyRepeat(int a, int b);
 
-void	px2img(SDL_Renderer *render, int clr, int x, int y)
+void	px2img(int *pixels, int clr, int x, int y)
 {
-//	t_argb	*c;
-//
-//	c = (t_argb *)&clr;
-	SDL_SetRenderDrawColor(render,
-		((t_argb *)&clr)->r,
-		((t_argb *)&clr)->g,
-		((t_argb *)&clr)->b,
-		((t_argb *)&clr)->a
-//		c->g,
-//		c->b,
-//		c->a
-		);
-	SDL_RenderDrawPoint(render, x, y);
+	pixels[(int)(WIN_W) * y + x] = clr;
 }
 
 int		get_pixel(SDL_Surface *src, int x, int y)
@@ -117,17 +105,20 @@ static int	global_loop(t_env *env)
 	while (env->run)
 	{
 		SDL_PollEvent(&env->event);
-			if (env->event.type == 256)
-				env->run = 0;
-			if (env->event.window.type == SDL_WINDOWEVENT_CLOSE
-				|| env->event.key.keysym.sym == SDLK_ESCAPE
-				|| env->event.type == SDL_QUIT)
-					exit (1);
-			if (handle_events(env) == 1)
-//				raycast(env, 0, WIN_W);
-				redraw(env);
+		if (env->event.type == 256)
+			env->run = 0;
+		if (env->event.window.type == SDL_WINDOWEVENT_CLOSE
+			|| env->event.key.keysym.sym == SDLK_ESCAPE
+			|| env->event.type == SDL_QUIT)
+				exit (1);
+		if (handle_events(env) == 1)
+		{
+			redraw(env);
+			SDL_UpdateTexture(env->texture, NULL, env->pixels, (int)WIN_W << 2);
+			SDL_RenderCopy(env->render, env->texture, NULL, NULL);
 			SDL_RenderPresent(env->render);
-			env->key = SDL_GetKeyboardState(NULL);
+		}
+		env->key = SDL_GetKeyboardState(NULL);
 	}
 	exit(1);
 	return (0);
@@ -147,7 +138,9 @@ int main(int argc, char **argv)
 {
 	t_env	env;
 	int		**map;
+	int		*pixels;
 
+	//INIT
 	env.cam.pos_x = 3;
 	env.cam.pos_y = 3;
 	env.dir_x = -1;
@@ -159,27 +152,35 @@ int main(int argc, char **argv)
 	env.run = 1;
 	env.pal = 0;
 	env.text = 1;
+	init_color(&env);
+
+	//THREAD INIT
 	if (argv[2] && atoi(argv[2]) > 0)
 		env.thread_cnt = atoi(argv[2]);
 	else
 		env.thread_cnt = 1;
 	env.args = (t_args *)malloc(sizeof(t_args) * (env.thread_cnt + 1));
 	env.thread = malloc_thread(env.thread_cnt, env.args, &env);
-	init_color(&env);
+
+	//WIN INIT
 	if (SDL_Init(SDL_INIT_EVENTS) == -1)
 		exit(2);
 	env.win = SDL_CreateWindow("Wolf3D", 0, 0, WIN_W, WIN_H, 0);
 	env.render = SDL_CreateRenderer(env.win, 0,
 		SDL_RENDERER_TARGETTEXTURE |
 		SDL_RENDERER_SOFTWARE |
-		SDL_RENDERER_ACCELERATED |
-	0	);
+		SDL_RENDERER_ACCELERATED
+		);
 	SDL_SetRenderDrawColor(env.render, 0xC0, 0, 0, 255);
 	SDL_RenderClear(env.render);
 	SDL_RenderPresent(env.render);
-//	env.texture = SDL_CreateTexture(env.render,
-//		SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
-//		WIN_W, WIN_H);
+	env.pixels = (int *)malloc(sizeof(int) * (WIN_H * WIN_W));
+	env.texture = SDL_CreateTexture(env.render,
+		SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+		WIN_W, WIN_H);
+	SDL_SetRenderTarget(env.render, env.texture);
+
+	//WOLF INIT
 	env.map = parsing(argv[1]);
 	env.key = SDL_GetKeyboardState(NULL);
 	env.bmp = SDL_LoadBMP("topars.bmp");

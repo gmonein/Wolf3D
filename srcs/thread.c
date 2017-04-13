@@ -27,7 +27,7 @@ pthread_t			**malloc_thread(int count, t_args *args, void *a)
 		thread[count] = (pthread_t *)malloc(sizeof(pthread_t));
 		args[count].env = a;
 		args[count].start = x;
-		args[count].end = x + x_inc - 1;
+		args[count].end = x + x_inc;
 		x += x_inc;
 	}
 	return (thread);

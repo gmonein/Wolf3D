@@ -179,28 +179,26 @@ void	print_wall_text(t_env *env, t_ray *ray, int x)
 		color = get_pixel(env->bmp, textx, texty);
 		if (ray->side & 1 == 1)
 			color = (color >> 1) & 8355711;
-		px2img(env->render, color, x, y);
+		px2img(env->pixels, color, x, y);
 	}
 }
 
 void	draw_floor(t_env *env, t_ray *ray, int x)
 {
-	char	*col;
+	int		y;
 
-	col = (char *)&env->color[env->pal][5];
-	SDL_SetRenderDrawColor(env->render,
-		col[0], col[1], col[2], SDL_ALPHA_OPAQUE);
-	SDL_RenderDrawLine(env->render, x, 0, x, ray->draw_start);
+	y = -1;
+	while (++y < ray->draw_start)
+		px2img(env->pixels, 0x00A0A0A0, x, y);
 }
 
 void	draw_sol(t_env *env, t_ray *ray, int x)
 {
-	char	*col;
+	int		y;
 
-	col = (char *)&env->color[env->pal][4];
-	SDL_SetRenderDrawColor(env->render,
-		col[0], col[1], col[2], SDL_ALPHA_OPAQUE);
-	SDL_RenderDrawLine(env->render, x, ray->draw_end, x, WIN_H - 1);
+	y = ray->draw_end - 1;
+	while (++y < WIN_H)
+		px2img(env->pixels, 0x00A0A0A0, x, y);
 }
 
 int		raycast(t_env *env, int start, int end)
@@ -218,10 +216,11 @@ int		raycast(t_env *env, int start, int end)
 		set_raystep(env, &ray);
 		ray.hit = launch_ray(env, &ray);
 		get_wall_inf(env, &ray);
-		if (ray.hit == 2 && env->text == 1)
-			print_wall_text(env, &ray, x);
-		else
-			print_wall_uni(env, &ray, x);
+//		if (ray.hit == 2 && env->text == 1)
+		print_wall_text(env, &ray, x);
+//		else
+//			px2img(env->pixels, 0x00FF0000, x, 100);
+//			print_wall_uni(env, &ray, x);
 		draw_floor(env, &ray, x);
 		draw_sol(env, &ray, x);
 	}

@@ -42,7 +42,7 @@
 
 int		**parsing(char *str);
 void	ray_trace(t_env *e);
-void	px2img(SDL_Renderer *render, int clr, int x, int y);
+void	px2img(int *color, int clr, int x, int y);
 int		raycast(t_env *env, int start, int end);
 int		get_pixel(SDL_Surface *src, int x, int y);
 pthread_t			**malloc_thread(int count, t_args *args, void *a);
