@@ -13,7 +13,7 @@ void	px2img(int *pixels, int clr, int x, int y)
 
 int		get_pixel(SDL_Surface *src, int x, int y)
 {
-	return (*((int *)(src->pixels + y * src->pitch + (x << 2))));
+	return (*((int *)(1 + src->pixels + y * src->pitch + (x << 2))));
 }
 
 static int handle_events(t_env *env)
@@ -100,8 +100,24 @@ static int handle_events(t_env *env)
 	return (act);
 }
 
+double		clock_to_ms(clock_t ticks)
+{
+	return ((ticks / (double)CLOCKS_PER_SEC) * 1000);
+}
+
 static int	global_loop(t_env *env)
 {
+	clock_t			b_clock;
+	clock_t			e_clock;
+	clock_t			delta_clock;
+	double			framerate;
+	float			fremetime_ms;
+	unsigned int	frame;
+
+	delta_clock = 0;
+	frame = 0;
+	framerate = 30;
+	fremetime_ms = 33.33f;
 	while (env->run)
 	{
 		SDL_PollEvent(&env->event);
@@ -111,14 +127,24 @@ static int	global_loop(t_env *env)
 			|| env->event.key.keysym.sym == SDLK_ESCAPE
 			|| env->event.type == SDL_QUIT)
 				exit (1);
-		if (handle_events(env) == 1)
-		{
-			redraw(env);
-			SDL_UpdateTexture(env->texture, NULL, env->pixels, (int)WIN_W << 2);
-			SDL_RenderCopy(env->render, env->texture, NULL, NULL);
-			SDL_RenderPresent(env->render);
-		}
+		handle_events(env);
+		b_clock = clock();
+		redraw(env);
+		SDL_UpdateTexture(env->texture, NULL, env->pixels, (int)WIN_W << 2);
+		SDL_RenderCopy(env->render, env->texture, NULL, NULL);
+		SDL_RenderPresent(env->render);
+		e_clock = clock();
 		env->key = SDL_GetKeyboardState(NULL);
+		delta_clock += e_clock - b_clock;
+		frame++;
+		if (clock_to_ms(delta_clock) > 1000.0f)
+		{
+			framerate = (double)frame;// * 0.5 + framerate * 0.5;
+			frame = 0;
+			delta_clock -= CLOCKS_PER_SEC;
+			fremetime_ms = 1000.0f / (framerate == 0 ? 0.001 : framerate);
+			printf("FPS = %lf\n", fremetime_ms);
+		}
 	}
 	exit(1);
 	return (0);
@@ -152,6 +178,7 @@ int main(int argc, char **argv)
 	env.run = 1;
 	env.pal = 0;
 	env.text = 1;
+	env.blur = 1;
 	init_color(&env);
 
 	//THREAD INIT

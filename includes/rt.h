@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <math.h>
 #include <pthread.h>
+#include <time.h>
 
 /*
 ** -------------------------- Internal Libraries -------------------------------
@@ -40,7 +41,7 @@
 ** -----------------------------------------------------------------------------
 */
 
-int		**parsing(char *str);
+short	**parsing(char *str);
 void	ray_trace(t_env *e);
 void	px2img(int *color, int clr, int x, int y);
 int		raycast(t_env *env, int start, int end);

@@ -17,6 +17,8 @@ typedef struct		s_vector_inc
 
 typedef struct		s_ray
 {
+	float			floor_x_wall;
+	float			floor_y_wall;
 	float			cam_x;
 	float			pos_x;
 	float			pos_y;
@@ -33,8 +35,17 @@ typedef struct		s_ray
 	float			step_y;
 	float			delta_dist_x;
 	float			delta_dist_y;
+	float			wallx;
+	float			current_floor_x;
+	float			current_floor_y;
+	float			dist_player;
+	float			weight;
+	float			current_dist;
+	int				floor_text_x;
+	int				floor_text_y;
 	int				hit;
 	int				side;
+	int				nside;
 	int				line_height;
 	int				draw_start;
 	int				draw_end;
@@ -53,6 +64,7 @@ t_vector_inc		set_vector_by_y(t_vector_inc vec)
 		vec.dx * fabs(1 / vec.dy),
 		vec.dy * fabs(1 / vec.dy), 0});
 }
+
 
 void	set_ray(t_env *env, t_ray *ray, int x)
 {
@@ -131,7 +143,9 @@ void	get_wall_inf(t_env *env, t_ray *ray)
 			(ray->map_y - ray->pos_y + (1 - ray->step_y) / 2) / ray->dir_y;
 	if (ray->side == 0 && ray->pos_x - ray->map_x < 0
 		|| ray->side == 1 && ray->pos_y - ray->map_y < 0)
-		ray->side += 2;
+		ray->nside = 2;
+	else
+		ray->nside = 0;
 	ray->line_height = (int)(WIN_H / ray->wall_dist);
 	ray->draw_start = -ray->line_height / 2 + (int)WIN_H / 2;
 	ray->draw_end = ray->line_height / 2 + (int)WIN_H / 2;
@@ -143,53 +157,196 @@ void	get_wall_inf(t_env *env, t_ray *ray)
 
 void	print_wall_uni(t_env *env, t_ray *ray, int x)
 {
-	char	*col;
+	int		color;;
+	int		i;
 
-	col = (char *)&env->color[env->pal][ray->side];
-	SDL_SetRenderDrawColor(env->render,
-		col[0], col[1], col[2], SDL_ALPHA_OPAQUE);
-	SDL_RenderDrawLine(env->render, x, ray->draw_start, x, ray->draw_end);
+	i = ray->draw_start;
+	color = env->color[env->pal][ray->side + ray->nside];
+	while (i + 10 < ray->draw_end)
+	{
+		px2img(env->pixels, color, x, i);
+		px2img(env->pixels, color, x, i + 1);
+		px2img(env->pixels, color, x, i + 2);
+		px2img(env->pixels, color, x, i + 3);
+		px2img(env->pixels, color, x, i + 4);
+		px2img(env->pixels, color, x, i + 5);
+		px2img(env->pixels, color, x, i + 6);
+		px2img(env->pixels, color, x, i + 7);
+		px2img(env->pixels, color, x, i + 8);
+		px2img(env->pixels, color, x, i + 9);
+		i += 10;
+	}
+	i--;
+	while (++i < ray->draw_end)
+		px2img(env->pixels, color, x, i);
+}
+
+void	print_roof_uni(t_env *env, t_ray *ray, int x)
+{
+	int		color;;
+	int		i;
+
+	i = 0;
+	color = env->color[env->pal][4];
+	while (i + 10 < ray->draw_start)
+	{
+		px2img(env->pixels, color, x, i);
+		px2img(env->pixels, color, x, i + 1);
+		px2img(env->pixels, color, x, i + 2);
+		px2img(env->pixels, color, x, i + 3);
+		px2img(env->pixels, color, x, i + 4);
+		px2img(env->pixels, color, x, i + 5);
+		px2img(env->pixels, color, x, i + 6);
+		px2img(env->pixels, color, x, i + 7);
+		px2img(env->pixels, color, x, i + 8);
+		px2img(env->pixels, color, x, i + 9);
+		i += 10;
+	}
+	i--;
+	while (++i < ray->draw_start)
+		px2img(env->pixels, color, x, i);
+}
+
+void	print_floor_uni(t_env *env, t_ray *ray, int x)
+{
+	int		color;;
+	int		i;
+
+	i = ray->draw_end;
+	color = env->color[env->pal][5];
+	while (i + 10 < WIN_H - 1)
+	{
+		px2img(env->pixels, color, x, i);
+		px2img(env->pixels, color, x, i + 1);
+		px2img(env->pixels, color, x, i + 2);
+		px2img(env->pixels, color, x, i + 3);
+		px2img(env->pixels, color, x, i + 4);
+		px2img(env->pixels, color, x, i + 5);
+		px2img(env->pixels, color, x, i + 6);
+		px2img(env->pixels, color, x, i + 7);
+		px2img(env->pixels, color, x, i + 8);
+		px2img(env->pixels, color, x, i + 9);
+		i += 10;
+	}
+	i--;
+	while (++i < WIN_H - 1)
+		px2img(env->pixels, color, x, i);
+}
+
+int		blend(unsigned char fg[4], unsigned char bg[4])
+{
+	unsigned int		alpha;
+	unsigned int		inv_alpha;
+	unsigned char		res[4];
+
+	alpha = fg[3] + 1;
+	inv_alpha = 256 - fg[3];
+	res[2] = (unsigned char)((alpha * fg[2] + inv_alpha * bg[2]) >> 8);
+	res[0] = (unsigned char)((alpha * fg[0] + inv_alpha * bg[0]) >> 8);
+	res[1] = (unsigned char)((alpha * fg[1] + inv_alpha * bg[1]) >> 8);
+	res[3] = 0xFF;
+	return (*(unsigned int *)res);
 }
 
 void	print_wall_text(t_env *env, t_ray *ray, int x)
 {
-	float		wallx;
 	int			textx;
 	int			y;
 	int			d;
 	int			texty;
 	int			color;
+	int			fg;
+	char		alpha;
 
 	if (ray->side == 0 || ray->side == 2)
-		wallx = ray->pos_y + ray->wall_dist * ray->dir_y;
+		ray->wallx = ray->pos_y + ray->wall_dist * ray->dir_y;
 	else
-		wallx = ray->pos_x + ray->wall_dist * ray->dir_x;
-	wallx -= floor(wallx);
-	textx = (int)(wallx * (float)(env->bmp->w));
-	if ((ray->side == 0 || ray->side == 2) && ray->dir_x > 0)
+		ray->wallx = ray->pos_x + ray->wall_dist * ray->dir_x;
+	ray->wallx -= floor(ray->wallx);
+	textx = (int)(ray->wallx * (float)(env->bmp->w));
+	if ((ray->side == 0) && ray->dir_x > 0)
 		textx = env->bmp->w - textx - 1;
-	if ((ray->side == 1 || ray->side == 3) && ray->dir_y < 0)
+	if ((ray->side == 1) && ray->dir_y < 0)
 		textx = env->bmp->w - textx - 1;
 	y = ray->draw_start - 1;
+	if (env->blur == 1)
+	{
+		fg = ray->wall_dist * 26;
+		if (!(fg < 0xFF))
+			fg = 0xFF;
+		fg <<= 24;
+	}
 	while (++y < ray->draw_end)
 	{
 		d = (y << 8) - ((int)WIN_H << 7)
 			+ ((int)ray->line_height << 7);
 		texty = ((d * env->bmp->h) / ray->line_height) / 256;
 		color = get_pixel(env->bmp, textx, texty);
-		if (ray->side & 1 == 1)
-			color = (color >> 1) & 8355711;
+		color = blend((char *)&fg, (char *)&color);
 		px2img(env->pixels, color, x, y);
 	}
 }
 
-void	draw_floor(t_env *env, t_ray *ray, int x)
+void	set_side(t_ray *ray)
 {
-	int		y;
+	if (ray->side == 0 && ray->dir_x > 0)
+	{
+		ray->floor_x_wall = ray->map_x;
+		ray->floor_y_wall = ray->map_y + ray->wallx;
+	}
+	else if (ray->side == 0 && ray->dir_x < 0)
+	{
+		ray->floor_x_wall = ray->map_x + 1;
+		ray->floor_y_wall = ray->map_y + ray->wallx;
+	}
+	else if (ray->side == 1 && ray->dir_y > 0)
+	{
+		ray->floor_x_wall = ray->map_x + ray->wallx;
+		ray->floor_y_wall = ray->map_y;
+	}
+	else
+	{
+		ray->floor_x_wall = ray->map_x + ray->wallx;
+		ray->floor_y_wall = ray->map_y + 1;
+	}
+}
 
-	y = -1;
-	while (++y < ray->draw_start)
-		px2img(env->pixels, 0x00A0A0A0, x, y);
+void	draw_floor_text(t_env *env, t_ray *ray, int x)
+{
+	int			y;
+	int			color;
+	int			fg;
+
+	y = ray->draw_end;
+	ray->dist_player = 0.0f;
+	set_side(ray);
+	while (++y < WIN_H)
+	{
+		ray->current_dist = WIN_H / (2.0f * y - WIN_H);
+		ray->weight = (ray->current_dist - ray->dist_player)
+					/ (ray->wall_dist - ray->dist_player);
+		ray->current_floor_x =
+			ray->weight * ray->floor_x_wall + (1.0 - ray->weight) * ray->pos_x;
+		ray->current_floor_y =
+			ray->weight * ray->floor_y_wall + (1.0 - ray->weight) * ray->pos_y;
+		ray->floor_text_x =
+						(int)(ray->current_floor_x * env->bmp->w) % env->bmp->w;
+		ray->floor_text_y =
+						(int)(ray->current_floor_y * env->bmp->h) % env->bmp->h;
+		if (env->blur == 1)
+		{
+			fg = ray->current_dist * 26;
+			if (!(fg < 0xFF))
+				fg = 0xFF;
+			fg = (fg << 24) & 0xFF000000;
+		}
+		color = get_pixel(env->bmp, ray->floor_text_x, ray->floor_text_y);
+		color = blend((char *)&fg, (char *)&color);
+		px2img(env->pixels, color, x, y - 1);
+		color = get_pixel(env->bmp, ray->floor_text_x, ray->floor_text_y);
+		color = blend((char *)&fg, (char *)&color);
+		px2img(env->pixels, color, x, WIN_H - y);
+	}
 }
 
 void	draw_sol(t_env *env, t_ray *ray, int x)
@@ -216,12 +373,16 @@ int		raycast(t_env *env, int start, int end)
 		set_raystep(env, &ray);
 		ray.hit = launch_ray(env, &ray);
 		get_wall_inf(env, &ray);
-//		if (ray.hit == 2 && env->text == 1)
-		print_wall_text(env, &ray, x);
-//		else
-//			px2img(env->pixels, 0x00FF0000, x, 100);
-//			print_wall_uni(env, &ray, x);
-		draw_floor(env, &ray, x);
-		draw_sol(env, &ray, x);
+		if (env->text == 1)
+		{
+			print_wall_text(env, &ray, x);
+			draw_floor_text(env, &ray, x);
+		}
+		else
+		{
+			print_wall_uni(env, &ray, x);
+			print_floor_uni(env, &ray, x);
+			print_roof_uni(env, &ray, x);
+		}
 	}
 }

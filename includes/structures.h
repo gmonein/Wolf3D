@@ -39,10 +39,11 @@ typedef struct		s_env
 	int				*pixels;
 	pthread_t		**thread;
 	t_args			*args;
-	int				thread_cnt;
-	int				pal;
-	int				text;
-	int				**map;
+	short			thread_cnt;
+	short			pal;
+	short			text;
+	short			blur;
+	short			**map;
 	float			dir_x;
 	float			old_dir_x;
 	float			dir_y;
@@ -58,6 +59,9 @@ typedef struct		s_env
 	int				x;
 	int				y;
 	int				color[1][6];
+	time_t			time;
+	time_t			oldtime;
+	struct tm		mytime;
 }                   t_env;
 
 #endif /* structures_h */

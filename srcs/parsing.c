@@ -1,10 +1,10 @@
 #include "rt.h"
 #include <fcntl.h>
 #include <unistd.h>
-int		count_line(int fd)
+short		count_line(short fd)
 {
 	char	*line;
-	int		y;
+	short		y;
 
 	y = 1;
 	while (get_next_line(fd, &line) > 0)
@@ -16,10 +16,10 @@ int		count_line(int fd)
 	return (y);
 }
 
-int		len_line(char *str)
+short	len_line(char *str)
 {
-	int		len;
-	int		i;
+	short		len;
+	short		i;
 
 	len = 1;
 	i = 0;
@@ -32,13 +32,13 @@ int		len_line(char *str)
 	return (len);
 }
 
-int		*pars_line(char *str, int *len)
+short	*pars_line(char *str, short *len)
 {
-	int		*tab;
-	int		i;
+	short		*tab;
+	short		i;
 
 	*len = len_line(str);
-	tab = (int *)malloc(sizeof(int) * (*len + 2));
+	tab = (short *)malloc(sizeof(short) * (*len + 2));
 	tab[0] = -1;
 	i = 1;
 	while (*str && *str != '\n')
@@ -55,29 +55,29 @@ int		*pars_line(char *str, int *len)
 	return (tab);
 }
 
-int		*set_border(int len)
+short		*set_border(short len)
 {
-	int		*line;
-	int		i;
+	short		*line;
+	short		i;
 
-	line = (int *)malloc(sizeof(int) * (len + 2));
+	line = (short *)malloc(sizeof(short) * (len + 2));
 	i = -1;
 	while (len + 2 > ++i)
 		line[i] = -1;
 	return (line);
 }
 
-int		**parsing(char *file)
+short		**parsing(char *file)
 {
-	int		fd;
-	int		y;
-	int		**tab;
-	int		i;
-	char	*line;
-	int		len;
+	short		fd;
+	short		y;
+	short		**tab;
+	short		i;
+	char		*line;
+	short		len;
 
 	y = count_line(open(file, O_RDONLY)) - 1;
-	tab = (int **)malloc(sizeof(int *) * (y + 2));
+	tab = (short **)malloc(sizeof(short *) * (y + 2));
 	i = 1;
 	fd = open(file, O_RDONLY);
 	while (i < y + 1)
