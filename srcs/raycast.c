@@ -4,43 +4,43 @@
 
 typedef struct		s_pos
 {
-	float			x;
-	float			y;
+	double			x;
+	double			y;
 }					t_pos;
 
 typedef struct		s_vector_inc
 {
-	float			dx;
-	float			dy;
-	float			dif;
+	double			dx;
+	double			dy;
+	double			dif;
 }					t_vector_inc;
 
 typedef struct		s_ray
 {
-	float			floor_x_wall;
-	float			floor_y_wall;
-	float			cam_x;
-	float			pos_x;
-	float			pos_y;
-	float			map_x;
-	float			map_y;
-	float			dir_x;
-	float			dir_y;
-	float			plane_x;
-	float			plane_y;
-	float			side_x;
-	float			side_y;
-	float			wall_dist;
-	float			step_x;
-	float			step_y;
-	float			delta_dist_x;
-	float			delta_dist_y;
-	float			wallx;
-	float			current_floor_x;
-	float			current_floor_y;
-	float			dist_player;
-	float			weight;
-	float			current_dist;
+	double			floor_x_wall;
+	double			floor_y_wall;
+	double			cam_x;
+	double			pos_x;
+	double			pos_y;
+	double			map_x;
+	double			map_y;
+	double			dir_x;
+	double			dir_y;
+	double			plane_x;
+	double			plane_y;
+	double			side_x;
+	double			side_y;
+	double			wall_dist;
+	double			step_x;
+	double			step_y;
+	double			delta_dist_x;
+	double			delta_dist_y;
+	double			wallx;
+	double			current_floor_x;
+	double			current_floor_y;
+	double			dist_player;
+	double			weight;
+	double			current_dist;
 	int				floor_text_x;
 	int				floor_text_y;
 	int				hit;
@@ -68,7 +68,7 @@ t_vector_inc		set_vector_by_y(t_vector_inc vec)
 
 void	set_ray(t_env *env, t_ray *ray, int x)
 {
-	ray->cam_x = 2 * x / (float)WIN_W - 1;
+	ray->cam_x = 2 * x / (double)WIN_W - 1;
 	ray->pos_x = env->cam.pos_x;
 	ray->pos_y = env->cam.pos_y;
 	ray->dir_x = env->dir_x + ray->plane_x * ray->cam_x;
@@ -263,7 +263,7 @@ void	print_wall_text(t_env *env, t_ray *ray, int x)
 	else
 		ray->wallx = ray->pos_x + ray->wall_dist * ray->dir_x;
 	ray->wallx -= floor(ray->wallx);
-	textx = (int)(ray->wallx * (float)(env->bmp->w));
+	textx = (int)(ray->wallx * (double)(env->bmp->w));
 	if ((ray->side == 0) && ray->dir_x > 0)
 		textx = env->bmp->w - textx - 1;
 	if ((ray->side == 1) && ray->dir_y < 0)
@@ -275,6 +275,7 @@ void	print_wall_text(t_env *env, t_ray *ray, int x)
 		if (!(fg < 0xFF))
 			fg = 0xFF;
 		fg <<= 24;
+		fg |= 0x00FFFFFF;
 	}
 	while (++y < ray->draw_end)
 	{
@@ -339,6 +340,7 @@ void	draw_floor_text(t_env *env, t_ray *ray, int x)
 			if (!(fg < 0xFF))
 				fg = 0xFF;
 			fg = (fg << 24) & 0xFF000000;
+			fg |= 0x00FFFFFF;
 		}
 		color = get_pixel(env->bmp, ray->floor_text_x, ray->floor_text_y);
 		color = blend((char *)&fg, (char *)&color);

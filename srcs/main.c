@@ -1,8 +1,8 @@
 
 #include "rt.h"
 #include <signal.h>
-#define D_PAS 0.05f
-#define R_PAS 0.025f
+#define D_PAS 0.075f
+#define R_PAS 0.05f
 
 int	SDL_EnableKeyRepeat(int a, int b);
 

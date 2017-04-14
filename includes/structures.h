@@ -20,12 +20,12 @@ typedef struct		s_argb
 
 typedef struct		s_player
 {
-	float			axe;
-	float			cam_x;
-	float			pos_x;
-	float			pos_y;
-	float			ray_x;
-	float			ray_y;
+	double			axe;
+	double			cam_x;
+	double			pos_x;
+	double			pos_y;
+	double			ray_x;
+	double			ray_y;
 }					t_player;
 
 typedef struct		s_env
@@ -44,14 +44,14 @@ typedef struct		s_env
 	short			text;
 	short			blur;
 	short			**map;
-	float			dir_x;
-	float			old_dir_x;
-	float			dir_y;
-	float			mid_dir_x;
-	float			mid_dir_y;
-	float			plane_x;
-	float			old_plane_x;
-	float			plane_y;
+	double			dir_x;
+	double			old_dir_x;
+	double			dir_y;
+	double			mid_dir_x;
+	double			mid_dir_y;
+	double			plane_x;
+	double			old_plane_x;
+	double			plane_y;
 	t_player		cam;
     short			redraw;
     char			run;
