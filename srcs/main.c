@@ -130,9 +130,10 @@ static int	global_loop(t_env *env)
 		handle_events(env);
 		b_clock = clock();
 		redraw(env);
-		SDL_UpdateTexture(env->texture, NULL, env->pixels, (int)WIN_W << 2);
-		SDL_RenderCopy(env->render, env->texture, NULL, NULL);
-		SDL_RenderPresent(env->render);
+//		SDL_UpdateTexture(env->texture, NULL, env->pixels, (int)WIN_W << 2);
+//		SDL_RenderCopy(env->render, env->texture, NULL, NULL);
+//		SDL_RenderPresent(env->render);
+		SDL_UpdateWindowSurface(env->win);
 		e_clock = clock();
 		env->key = SDL_GetKeyboardState(NULL);
 		delta_clock += e_clock - b_clock;
@@ -193,20 +194,22 @@ int main(int argc, char **argv)
 	if (SDL_Init(SDL_INIT_EVENTS) == -1)
 		exit(2);
 	env.win = SDL_CreateWindow("Wolf3D", 0, 0, WIN_W, WIN_H, 0);
-	env.render = SDL_CreateRenderer(env.win, 0,
-		SDL_RENDERER_TARGETTEXTURE |
-		SDL_RENDERER_SOFTWARE |
-		SDL_RENDERER_ACCELERATED
-		);
-	SDL_SetRenderDrawColor(env.render, 0xC0, 0, 0, 255);
-	SDL_RenderClear(env.render);
-	SDL_RenderPresent(env.render);
-	env.pixels = (int *)malloc(sizeof(int) * (WIN_H * WIN_W));
-	env.texture = SDL_CreateTexture(env.render,
-		SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
-		WIN_W, WIN_H);
-	SDL_SetRenderTarget(env.render, env.texture);
+//	env.render = SDL_CreateRenderer(env.win, 0,
+//		SDL_RENDERER_TARGETTEXTURE |
+//		SDL_RENDERER_SOFTWARE |
+//		SDL_RENDERER_ACCELERATED
+//		);
+//	SDL_SetRenderDrawColor(env.render, 0xC0, 0, 0, 255);
+//	SDL_RenderClear(env.render);
+//	SDL_RenderPresent(env.render);
+//	env.pixels = (int *)malloc(sizeof(int) * (WIN_H * WIN_W));
+//	env.texture = SDL_CreateTexture(env.render,
+//		SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+//		WIN_W, WIN_H);
+//	SDL_SetRenderTarget(env.render, env.texture);
 
+	env.screen = SDL_GetWindowSurface(env.win);
+	env.pixels = env.screen->pixels;
 	//WOLF INIT
 	env.map = parsing(argv[1]);
 	env.key = SDL_GetKeyboardState(NULL);

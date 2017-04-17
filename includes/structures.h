@@ -36,6 +36,7 @@ typedef struct		s_env
 	SDL_Surface		*bmp;
 	SDL_Renderer	*render;
 	SDL_Texture		*texture;
+	SDL_Surface		*screen;
 	int				*pixels;
 	pthread_t		**thread;
 	t_args			*args;
