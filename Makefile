@@ -1,16 +1,26 @@
 NAME = Wolf3D
 
 CPP = gcc
+
+SDLFLAGS = -framework SDL2 -F ./frameworks
+
+SDL2_HEADER = -I ./frameworks/SDL2.framework/Headers/
+
+SDL2_P = -rpath @loader_path/frameworks/
+
 CFLAGS = -O3
-SDLFLAGS = -lSDL2-2.0 -lpthread
+
 HEADER = includes
+
 SOURCES = main.c \
 		parsing.c \
 		raycast.c \
 		filler.c \
 		ft_fill_area.c \
 		thread.c
+
 DIR_O = obj
+
 DIR_S = srcs
 
 SRCS = $(addprefix $(DIR_S)/,$(SOURCES))
@@ -19,10 +29,10 @@ OBJS = $(addprefix $(DIR_O)/,$(SOURCES:.c=.o))
 all: obj $(NAME)
 
 ${NAME}: $(OBJS)
-	${CPP} $(CFLAGS) -o $@ $^ $(SDLFLAGS) libft/libft.a -lm
+	${CPP} $(CFLAGS) -o $@ $^ libft/libft.a $(SDL2_P) $(SDLFLAGS) $(SDL2_HEADER)
 
 $(DIR_O)/%.o: $(DIR_S)/%.c
-	$(CPP) $(CFLAGS) -I $(HEADER) -c -o $@ $< $(SDLFLAGS) libft/libft.a -lm
+	$(CPP) $(CFLAGS) -I $(HEADER) -c -o $@ $<
 
 obj:
 	mkdir -p obj

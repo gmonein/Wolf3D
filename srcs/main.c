@@ -100,24 +100,8 @@ static int handle_events(t_env *env)
 	return (act);
 }
 
-double		clock_to_ms(clock_t ticks)
-{
-	return ((ticks / (double)CLOCKS_PER_SEC) * 1000);
-}
-
 static int	global_loop(t_env *env)
 {
-	clock_t			b_clock;
-	clock_t			e_clock;
-	clock_t			delta_clock;
-	double			framerate;
-	float			fremetime_ms;
-	unsigned int	frame;
-
-	delta_clock = 0;
-	frame = 0;
-	framerate = 30;
-	fremetime_ms = 33.33f;
 	while (env->run)
 	{
 		SDL_PollEvent(&env->event);
@@ -128,24 +112,11 @@ static int	global_loop(t_env *env)
 			|| env->event.type == SDL_QUIT)
 				exit (1);
 		handle_events(env);
-		b_clock = clock();
 		redraw(env);
-//		SDL_UpdateTexture(env->texture, NULL, env->pixels, (int)WIN_W << 2);
-//		SDL_RenderCopy(env->render, env->texture, NULL, NULL);
-//		SDL_RenderPresent(env->render);
-		SDL_UpdateWindowSurface(env->win);
-		e_clock = clock();
+		SDL_UpdateTexture(env->texture, NULL, env->pixels, (int)WIN_W << 2);
+		SDL_RenderCopy(env->render, env->texture, NULL, NULL);
+		SDL_RenderPresent(env->render);
 		env->key = SDL_GetKeyboardState(NULL);
-		delta_clock += e_clock - b_clock;
-		frame++;
-		if (clock_to_ms(delta_clock) > 1000.0f)
-		{
-			framerate = (double)frame;// * 0.5 + framerate * 0.5;
-			frame = 0;
-			delta_clock -= CLOCKS_PER_SEC;
-			fremetime_ms = 1000.0f / (framerate == 0 ? 0.001 : framerate);
-			printf("FPS = %lf\n", fremetime_ms);
-		}
 	}
 	exit(1);
 	return (0);
@@ -194,25 +165,27 @@ int main(int argc, char **argv)
 	if (SDL_Init(SDL_INIT_EVENTS) == -1)
 		exit(2);
 	env.win = SDL_CreateWindow("Wolf3D", 0, 0, WIN_W, WIN_H, 0);
-//	env.render = SDL_CreateRenderer(env.win, 0,
-//		SDL_RENDERER_TARGETTEXTURE |
-//		SDL_RENDERER_SOFTWARE |
-//		SDL_RENDERER_ACCELERATED
-//		);
-//	SDL_SetRenderDrawColor(env.render, 0xC0, 0, 0, 255);
-//	SDL_RenderClear(env.render);
-//	SDL_RenderPresent(env.render);
-//	env.pixels = (int *)malloc(sizeof(int) * (WIN_H * WIN_W));
-//	env.texture = SDL_CreateTexture(env.render,
-//		SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
-//		WIN_W, WIN_H);
-//	SDL_SetRenderTarget(env.render, env.texture);
+	env.render = SDL_CreateRenderer(env.win, 0,
+		SDL_RENDERER_TARGETTEXTURE
+		| SDL_RENDERER_SOFTWARE
+		| SDL_RENDERER_ACCELERATED
+		| SDL_RENDERER_PRESENTVSYNC
+		);
+	SDL_SetRenderDrawColor(env.render, 0xC0, 0, 0, 255);
+	SDL_RenderClear(env.render);
+	SDL_RenderPresent(env.render);
+	env.pixels = (int *)malloc(sizeof(int) * (WIN_H * WIN_W));
+	env.texture = SDL_CreateTexture(env.render,
+		SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+		WIN_W, WIN_H);
+	SDL_SetRenderTarget(env.render, env.texture);
 
-	env.screen = SDL_GetWindowSurface(env.win);
-	env.pixels = env.screen->pixels;
+//	env.screen = SDL_GetWindowSurface(env.win);
+//	env.pixels = env.screen->pixels;
 	//WOLF INIT
 	env.map = parsing(argv[1]);
 	env.key = SDL_GetKeyboardState(NULL);
 	env.bmp = SDL_LoadBMP("topars.bmp");
+	env.sprite = SDL_LoadBMP("sprite.bmp");
     return (global_loop(&env));
 }

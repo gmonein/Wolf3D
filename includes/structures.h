@@ -2,6 +2,8 @@
 #ifndef STRUCTURES_H
 # define STRUCTURES_H
 
+# include "rt.h"
+
 typedef struct		s_args
 {
 	struct s_env	*env;
@@ -36,6 +38,7 @@ typedef struct		s_env
 	SDL_Surface		*bmp;
 	SDL_Renderer	*render;
 	SDL_Texture		*texture;
+	SDL_Surface		*sprite;
 	SDL_Surface		*screen;
 	int				*pixels;
 	pthread_t		**thread;

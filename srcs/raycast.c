@@ -1,6 +1,4 @@
 # include "rt.h"
-#define FOV 120.0f
-#define DIV_FOV 60.0f
 
 typedef struct		s_pos
 {
