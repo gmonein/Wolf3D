@@ -180,12 +180,15 @@ int main(int argc, char **argv)
 		WIN_W, WIN_H);
 	SDL_SetRenderTarget(env.render, env.texture);
 
-//	env.screen = SDL_GetWindowSurface(env.win);
-//	env.pixels = env.screen->pixels;
 	//WOLF INIT
 	env.map = parsing(argv[1]);
 	env.key = SDL_GetKeyboardState(NULL);
-	env.bmp = SDL_LoadBMP("topars.bmp");
+	env.bmp = (SDL_Surface **)malloc(sizeof(SDL_Surface *) * 4);
+	env.zbuffer = (double *)malloc(sizeof(double) * (WIN_W + 1));
+	env.bmp[0] = SDL_LoadBMP("ressources/wall.bmp");
+	env.bmp[1] = SDL_LoadBMP("ressources/ground.bmp");
+	env.bmp[2] = SDL_LoadBMP("ressources/floor.bmp");
+	env.bmp[3] = SDL_LoadBMP("topars.bmp");
 	env.sprite = SDL_LoadBMP("sprite.bmp");
     return (global_loop(&env));
 }

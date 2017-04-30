@@ -8,7 +8,7 @@
 #include <math.h>
 #include <pthread.h>
 #include <time.h>
-# include <SDL2/SDL.h>
+# include "SDL2/SDL.h"
 # include "libft.h"
 # include "parameters.h"
 # include "structures.h"

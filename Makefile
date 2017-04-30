@@ -4,7 +4,7 @@ CPP = gcc
 
 SDLFLAGS = -framework SDL2 -F ./frameworks
 
-SDL2_HEADER = -I ./frameworks/SDL2.framework/Headers/
+SDL2_HEADER = -I SDL2.framework/Headers/
 
 SDL2_P = -rpath @loader_path/frameworks/
 
@@ -29,7 +29,7 @@ OBJS = $(addprefix $(DIR_O)/,$(SOURCES:.c=.o))
 all: obj $(NAME)
 
 ${NAME}: $(OBJS)
-	${CPP} $(CFLAGS) -o $@ $^ libft/libft.a $(SDL2_P) $(SDLFLAGS) $(SDL2_HEADER)
+	${CPP} $(CFLAGS) -o $@ $^ libft/libft.a $(SDL2_P) $(SDLFLAGS)
 
 $(DIR_O)/%.o: $(DIR_S)/%.c
 	$(CPP) $(CFLAGS) -I $(HEADER) -c -o $@ $<

@@ -35,11 +35,12 @@ typedef struct		s_env
     SDL_Window		*win;
     SDL_Event		event;
     SDL_Cursor		*cursor;
-	SDL_Surface		*bmp;
+	SDL_Surface		**bmp;
 	SDL_Renderer	*render;
 	SDL_Texture		*texture;
 	SDL_Surface		*sprite;
 	SDL_Surface		*screen;
+	double			*zbuffer;
 	int				*pixels;
 	pthread_t		**thread;
 	t_args			*args;
