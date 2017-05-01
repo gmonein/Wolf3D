@@ -2,9 +2,11 @@ NAME = Wolf3D
 
 CPP = gcc
 
-SDLFLAGS = -framework SDL2 -F ./frameworks
+SDLFLAGS = -framework SDL2 -framework SDL2_ttf -framework SDL2_image -F ./frameworks
 
-SDL2_HEADER = -I SDL2.framework/Headers/
+SDL2_HEADER = -I frameworks/SDL2.framework/Headers/ \
+				-I frameworks/SDL2_image.framework/Headers/ \
+				-I frameworks/SDL2_ttf.framework/Headers/
 
 SDL2_P = -rpath @loader_path/frameworks/
 
@@ -32,7 +34,7 @@ ${NAME}: $(OBJS)
 	${CPP} $(CFLAGS) -o $@ $^ libft/libft.a $(SDL2_P) $(SDLFLAGS)
 
 $(DIR_O)/%.o: $(DIR_S)/%.c
-	$(CPP) $(CFLAGS) -I $(HEADER) -c -o $@ $<
+	$(CPP) $(CFLAGS) -I $(HEADER) $(SDL2_HEADER) -c -o $@ $<
 
 obj:
 	mkdir -p obj

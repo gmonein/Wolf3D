@@ -189,6 +189,8 @@ int main(int argc, char **argv)
 	env.bmp[1] = SDL_LoadBMP("ressources/ground.bmp");
 	env.bmp[2] = SDL_LoadBMP("ressources/floor.bmp");
 	env.bmp[3] = SDL_LoadBMP("topars.bmp");
-	env.sprite = SDL_LoadBMP("sprite.bmp");
+	env.sprite = SDL_LoadBMP("ressources/kart_mario.bmp");
+	env.sprite_pos_x = 3;
+	env.sprite_pos_y = 3;
     return (global_loop(&env));
 }

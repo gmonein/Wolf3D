@@ -350,13 +350,75 @@ void	draw_floor_text(t_env *env, t_ray *ray, int x)
 	}
 }
 
-void	draw_sol(t_env *env, t_ray *ray, int x)
+void	draw_sprite(t_env *env, t_ray *ray)
 {
-	int		y;
+	double		sprite_dist;
+	double		sprite_x;
+	double		sprite_y;
 
-	y = ray->draw_end - 1;
-	while (++y < WIN_H)
-		px2img(env->pixels, 0x00A0A0A0, x, y);
+	double		invdet;
+	double		transform_x;
+	double		transform_y;
+
+	int			sprite_screen_x;
+
+	int			sprite_height;
+	int			sprite_width;
+	int			draw_start_x;
+	int			draw_end_x;
+	int			draw_start_y;
+	int			draw_end_y;
+	int			text_x;
+	int			text_y;
+
+	sprite_dist = ((ray->pos_x - env->sprite_pos_x) * (ray->pos_x - env->sprite_pos_x)
+				+ (ray->pos_y - env->sprite_pos_y) * (ray->pos_y - env->sprite_pos_y));
+	sprite_x = env->sprite_pos_x - ray->pos_x;
+	sprite_y = env->sprite_pos_y - ray->pos_y;
+
+	invdet = 1.0 / (env->dir_y * env->plane_x - env->dir_x * env->plane_y);
+
+	transform_x = invdet * (env->dir_y * sprite_x - env->dir_x * sprite_y);
+	transform_y = invdet * (-env->plane_y * sprite_x + env->plane_x * sprite_y);
+
+	sprite_screen_x = (int)((WIN_W / 2) * (1 + transform_x / transform_y));
+
+	sprite_height = abs((int)(WIN_H / transform_y));
+	draw_start_y = -sprite_height / 2 + WIN_H / 2;
+	if (draw_start_y < 0)
+		draw_start_y = 0;
+	draw_end_y = sprite_height / 2 + WIN_H / 2;
+	if (draw_end_y >= WIN_H)
+		draw_end_y = WIN_H - 1;
+
+	sprite_width = abs((int)(WIN_H / transform_y));
+	draw_start_x = -sprite_width / 2 + sprite_screen_x;
+	if (draw_start_x < 0)
+		draw_start_x = 0;
+	draw_end_x = sprite_width / 2 + sprite_screen_x;
+	if (draw_end_x >= WIN_W)
+		draw_end_x = WIN_W - 1;
+
+	int			i;
+	int			y;
+	int			d;
+	Uint32		color;
+	i = draw_start_x - 1;
+	while (++i < draw_end_x)
+	{
+		text_x = (int)(256 * (i - (-sprite_width / 2 + sprite_screen_x))
+								* env->sprite->w / sprite_width) / 256;
+		y = draw_start_y - 1;
+		if (transform_y > 0 && i > 0 && i < WIN_W && transform_y < env->zbuffer[i])
+			while (++y <= draw_end_y)
+			{
+				d = y * 256 - WIN_H * 128 + sprite_height * 128;
+				text_y = ((d * env->sprite->h) / sprite_height) / 256;
+				color = get_pixel(env->sprite, text_x, text_y % env->sprite->h);
+		//		if ((color & 0xFF000000) == 0)
+					px2img(env->pixels, color, i, y);
+			}
+	}
 }
 
 int		raycast(t_env *env, int start, int end)
@@ -386,5 +448,6 @@ int		raycast(t_env *env, int start, int end)
 			print_roof_uni(env, &ray, x);
 		}
 	}
+	draw_sprite(env, &ray);
 	return (1);
 }

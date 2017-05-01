@@ -67,6 +67,9 @@ typedef struct		s_env
 	time_t			time;
 	time_t			oldtime;
 	struct tm		mytime;
+
+	double			sprite_pos_x;
+	double			sprite_pos_y;
 }                   t_env;
 
 #endif /* structures_h */
