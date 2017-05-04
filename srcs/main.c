@@ -113,6 +113,7 @@ static int	global_loop(t_env *env)
 				exit (1);
 		handle_events(env);
 		redraw(env);
+		draw_sprite(env);
 		SDL_UpdateTexture(env->texture, NULL, env->pixels, (int)WIN_W << 2);
 		SDL_RenderCopy(env->render, env->texture, NULL, NULL);
 		SDL_RenderPresent(env->render);
@@ -150,7 +151,7 @@ int main(int argc, char **argv)
 	env.run = 1;
 	env.pal = 0;
 	env.text = 1;
-	env.blur = 1;
+	env.blur = 0;
 	init_color(&env);
 
 	//THREAD INIT
@@ -163,6 +164,8 @@ int main(int argc, char **argv)
 
 	//WIN INIT
 	if (SDL_Init(SDL_INIT_EVENTS) == -1)
+		exit(2);
+	if (IMG_Init(IMG_INIT_PNG) == -1)
 		exit(2);
 	env.win = SDL_CreateWindow("Wolf3D", 0, 0, WIN_W, WIN_H, 0);
 	env.render = SDL_CreateRenderer(env.win, 0,
@@ -185,11 +188,14 @@ int main(int argc, char **argv)
 	env.key = SDL_GetKeyboardState(NULL);
 	env.bmp = (SDL_Surface **)malloc(sizeof(SDL_Surface *) * 4);
 	env.zbuffer = (double *)malloc(sizeof(double) * (WIN_W + 1));
-	env.bmp[0] = SDL_LoadBMP("ressources/wall.bmp");
+	env.bmp[0] = IMG_Load("ressources/wall.png");
+	env.bmp[0] = SDL_ConvertSurfaceFormat(env.bmp[0], SDL_PIXELFORMAT_RGBA8888, 0);
 	env.bmp[1] = SDL_LoadBMP("ressources/ground.bmp");
-	env.bmp[2] = SDL_LoadBMP("ressources/floor.bmp");
+	env.bmp[2] = IMG_Load("ressources/floor.png");
+	env.bmp[2] = SDL_ConvertSurfaceFormat(env.bmp[2], SDL_PIXELFORMAT_RGBA8888, 0);
 	env.bmp[3] = SDL_LoadBMP("topars.bmp");
-	env.sprite = SDL_LoadBMP("ressources/kart_mario.bmp");
+	env.sprite = IMG_Load("ressources/kart_mario.png");
+	env.sprite = SDL_ConvertSurfaceFormat(env.sprite, SDL_PIXELFORMAT_RGBA8888, 0);
 	env.sprite_pos_x = 3;
 	env.sprite_pos_y = 3;
     return (global_loop(&env));

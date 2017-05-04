@@ -145,9 +145,9 @@ void	get_wall_inf(t_env *env, t_ray *ray, int x)
 		ray->nside = 2;
 	else
 		ray->nside = 0;
-	ray->line_height = (int)(WIN_H / ray->wall_dist);
-	ray->draw_start = -ray->line_height / 2 + (int)WIN_H / 2;
-	ray->draw_end = ray->line_height / 2 + (int)WIN_H / 2;
+	ray->line_height = (int)(256 / ray->wall_dist);
+	ray->draw_start = -ray->line_height / 2 + (int)WIN_H / 4;
+	ray->draw_end = ray->line_height / 2 + (int)WIN_H / 4;
 	if (ray->draw_start < 0)
 		ray->draw_start = 0;
 	if (ray->draw_end >= (int)WIN_H)
@@ -278,7 +278,7 @@ void	print_wall_text(t_env *env, t_ray *ray, int x)
 	}
 	while (++y < ray->draw_end)
 	{
-		d = (y << 8) - ((int)WIN_H << 7)
+		d = (y << 8) - ((int)WIN_H << 6)
 			+ ((int)ray->line_height << 7);
 		texty = ((d * env->bmp[0]->h) / ray->line_height) / 256;
 		color = get_pixel(env->bmp[0], textx, texty);
@@ -322,7 +322,7 @@ void	draw_floor_text(t_env *env, t_ray *ray, int x)
 	set_side(ray);
 	while (++y < WIN_H)
 	{
-		ray->current_dist = WIN_H / (2.0f * y - WIN_H);
+		ray->current_dist = 256 / (2.0f * y - WIN_H / 2);
 		ray->weight = (ray->current_dist - ray->dist_player)
 					/ (ray->wall_dist - ray->dist_player);
 		ray->current_floor_x =
@@ -330,9 +330,9 @@ void	draw_floor_text(t_env *env, t_ray *ray, int x)
 		ray->current_floor_y =
 			ray->weight * ray->floor_y_wall + (1.0 - ray->weight) * ray->pos_y;
 		ray->floor_text_x =
-						(int)(ray->current_floor_x * env->bmp[1]->w) % env->bmp[1]->w;
+						(int)(ray->current_floor_x * 64) % env->bmp[2]->w;
 		ray->floor_text_y =
-						(int)(ray->current_floor_y * env->bmp[1]->h) % env->bmp[1]->h;
+						(int)(ray->current_floor_y * 64) % env->bmp[2]->h;
 		if (env->blur == 1)
 		{
 			fg = ray->current_dist * 26;
@@ -344,13 +344,13 @@ void	draw_floor_text(t_env *env, t_ray *ray, int x)
 		color = get_pixel(env->bmp[2], ray->floor_text_x, ray->floor_text_y);
 		color = blend((void *)&fg, (void *)&color);
 		px2img(env->pixels, color, x, y - 1);
-		color = get_pixel(env->bmp[1], ray->floor_text_x, ray->floor_text_y);
-		color = blend((void *)&fg, (void *)&color);
-		px2img(env->pixels, color, x, WIN_H - y);
+//		color = get_pixel(env->bmp[1], ray->floor_text_x, ray->floor_text_y);
+//		color = blend((void *)&fg, (void *)&color);
+//		px2img(env->pixels, color, x, WIN_H - y);
 	}
 }
 
-void	draw_sprite(t_env *env, t_ray *ray)
+void	draw_sprite(t_env *env)
 {
 	double		sprite_dist;
 	double		sprite_x;
@@ -371,10 +371,10 @@ void	draw_sprite(t_env *env, t_ray *ray)
 	int			text_x;
 	int			text_y;
 
-	sprite_dist = ((ray->pos_x - env->sprite_pos_x) * (ray->pos_x - env->sprite_pos_x)
-				+ (ray->pos_y - env->sprite_pos_y) * (ray->pos_y - env->sprite_pos_y));
-	sprite_x = env->sprite_pos_x - ray->pos_x;
-	sprite_y = env->sprite_pos_y - ray->pos_y;
+	sprite_dist = ((env->cam.pos_x - env->sprite_pos_x) * (env->cam.pos_x - env->sprite_pos_x)
+				+ (env->cam.pos_y - env->sprite_pos_y) * (env->cam.pos_y - env->sprite_pos_y));
+	sprite_x = env->sprite_pos_x - env->cam.pos_x;
+	sprite_y = env->sprite_pos_y - env->cam.pos_y;
 
 	invdet = 1.0 / (env->dir_y * env->plane_x - env->dir_x * env->plane_y);
 
@@ -402,7 +402,8 @@ void	draw_sprite(t_env *env, t_ray *ray)
 	int			i;
 	int			y;
 	int			d;
-	Uint32		color;
+	int			color;
+	int			pix;;
 	i = draw_start_x - 1;
 	while (++i < draw_end_x)
 	{
@@ -410,13 +411,13 @@ void	draw_sprite(t_env *env, t_ray *ray)
 								* env->sprite->w / sprite_width) / 256;
 		y = draw_start_y - 1;
 		if (transform_y > 0 && i > 0 && i < WIN_W && transform_y < env->zbuffer[i])
-			while (++y <= draw_end_y)
+			while (++y < draw_end_y)
 			{
 				d = y * 256 - WIN_H * 128 + sprite_height * 128;
 				text_y = ((d * env->sprite->h) / sprite_height) / 256;
-				color = get_pixel(env->sprite, text_x, text_y % env->sprite->h);
-		//		if ((color & 0xFF000000) == 0)
-					px2img(env->pixels, color, i, y);
+				color = get_pixel(env->sprite, text_x, text_y /*% env->sprite->h*/);
+				color = blend(&color, &env->pixels[i + y * (int)(WIN_W)]);
+				px2img(env->pixels, color, i, y);
 			}
 	}
 }
@@ -440,6 +441,7 @@ int		raycast(t_env *env, int start, int end)
 		{
 			print_wall_text(env, &ray, x);
 			draw_floor_text(env, &ray, x);
+			print_roof_uni(env, &ray, x);
 		}
 		else
 		{
@@ -448,6 +450,5 @@ int		raycast(t_env *env, int start, int end)
 			print_roof_uni(env, &ray, x);
 		}
 	}
-	draw_sprite(env, &ray);
 	return (1);
 }

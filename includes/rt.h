@@ -24,4 +24,5 @@ int				get_pixel(SDL_Surface *src, int x, int y);
 pthread_t		**malloc_thread(int count, t_args *args, void *a);
 void			redraw(t_env *env);
 short			**parsing(char *file);
+void			draw_sprite(t_env *env);
 #endif /* rt_h */
