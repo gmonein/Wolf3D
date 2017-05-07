@@ -42,6 +42,7 @@ typedef struct		s_env
 	SDL_Surface		*screen;
 	double			*zbuffer;
 	int				*pixels;
+	SDL_Surface		*skybox;
 	pthread_t		**thread;
 	t_args			*args;
 	short			thread_cnt;

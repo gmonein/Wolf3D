@@ -193,9 +193,12 @@ int main(int argc, char **argv)
 	env.bmp[1] = SDL_LoadBMP("ressources/ground.bmp");
 	env.bmp[2] = IMG_Load("ressources/floor.png");
 	env.bmp[2] = SDL_ConvertSurfaceFormat(env.bmp[2], SDL_PIXELFORMAT_RGBA8888, 0);
-	env.bmp[3] = SDL_LoadBMP("topars.bmp");
+	env.bmp[3] = IMG_Load("ressources/grass.png");
+	env.bmp[3] = SDL_ConvertSurfaceFormat(env.bmp[3], SDL_PIXELFORMAT_RGBA8888, 0);
 	env.sprite = IMG_Load("ressources/kart_mario.png");
 	env.sprite = SDL_ConvertSurfaceFormat(env.sprite, SDL_PIXELFORMAT_RGBA8888, 0);
+	env.skybox = IMG_Load("ressources/skybox1.png");
+	env.skybox = SDL_ConvertSurfaceFormat(env.skybox, SDL_PIXELFORMAT_RGBA8888, 0);
 	env.sprite_pos_x = 3;
 	env.sprite_pos_y = 3;
     return (global_loop(&env));
