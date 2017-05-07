@@ -6,7 +6,7 @@
 /*   By: gmonein <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/04/26 17:30:57 by gmonein           #+#    #+#             */
-/*   Updated: 2017/04/26 17:48:57 by gmonein          ###   ########.fr       */
+/*   Updated: 2017/05/07 20:58:17 by gmonein          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ short	len_line(char *str)
 	return (len);
 }
 
-short	*pars_line(char *str, short *len)
+short	*pars_line(char *str, int *len)
 {
 	short		*tab;
 	short		i;
@@ -78,28 +78,26 @@ short		*set_border(short len)
 	return (line);
 }
 
-short		**parsing(char *file)
+short		**parsing(char *file, int *h, int *w)
 {
 	short		fd;
-	short		y;
 	short		**tab;
 	short		i;
 	char		*line;
-	short		len;
 
-	y = count_line(open(file, O_RDONLY)) - 1;
-	tab = (short **)malloc(sizeof(short *) * (y + 2));
+	*h = count_line(open(file, O_RDONLY)) - 1;
+	tab = (short **)malloc(sizeof(short *) * (*h + 2));
 	i = 1;
 	fd = open(file, O_RDONLY);
-	while (i < y + 1)
+	while (i < *h + 1)
 	{
 		get_next_line(fd, &line);
-		tab[i] = pars_line(line, &len);
+		tab[i] = pars_line(line, w);
 		i++;
 		free(line);
 	}
-	tab[0] = set_border(len);
-	tab[y + 1] = set_border(len);
+	tab[0] = set_border(*w);
+	tab[*h + 1] = set_border(*w);
 	close(fd);
 	return (tab);
 }

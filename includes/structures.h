@@ -40,7 +40,8 @@ typedef struct		s_env
 	SDL_Texture		*texture;
 	SDL_Surface		*sprite;
 	SDL_Surface		*screen;
-	double			*zbuffer;
+	int				**zbuffer;
+	//double			*zbuffer;
 	int				*pixels;
 	SDL_Surface		*skybox;
 	pthread_t		**thread;
@@ -49,7 +50,11 @@ typedef struct		s_env
 	short			pal;
 	short			text;
 	short			blur;
+
 	short			**map;
+	int				map_h;
+	int				map_w;
+
 	double			dir_x;
 	double			old_dir_x;
 	double			dir_y;

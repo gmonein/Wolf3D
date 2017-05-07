@@ -133,6 +133,27 @@ void	init_color(t_env *env)
 	env->color[0][5] = 0x332F3B;
 }
 
+int		**init_int_ttab(int x, int y, int val)
+{
+	int		i;
+	int		j;
+	int		**tab;
+
+	i = -1;
+	j = 0;
+	tab = (int **)malloc(sizeof(int) * x);
+	tab[0] = (int *)malloc(sizeof(int) * x * y);
+	while (++i <= y)
+	{
+		tab[i] = &tab[0][j];
+		j += x;
+	}
+	i = -1;
+	j -= x;
+	while (++i < j)
+		tab[0][i] = val;
+	return (tab);
+}
 int main(int argc, char **argv)
 {
 	t_env	env;
@@ -153,7 +174,7 @@ int main(int argc, char **argv)
 	env.text = 1;
 	env.blur = 0;
 	init_color(&env);
-
+	env.zbuffer = init_int_ttab(WIN_W, WIN_H, 42);
 	//THREAD INIT
 	if (argv[2] && atoi(argv[2]) > 0)
 		env.thread_cnt = atoi(argv[2]);
@@ -184,10 +205,9 @@ int main(int argc, char **argv)
 	SDL_SetRenderTarget(env.render, env.texture);
 
 	//WOLF INIT
-	env.map = parsing(argv[1]);
+	env.map = parsing(argv[1], &env.map_h, &env.map_w);
 	env.key = SDL_GetKeyboardState(NULL);
 	env.bmp = (SDL_Surface **)malloc(sizeof(SDL_Surface *) * 4);
-	env.zbuffer = (double *)malloc(sizeof(double) * (WIN_W + 1));
 	env.bmp[0] = IMG_Load("ressources/wall.png");
 	env.bmp[0] = SDL_ConvertSurfaceFormat(env.bmp[0], SDL_PIXELFORMAT_RGBA8888, 0);
 	env.bmp[1] = SDL_LoadBMP("ressources/ground.bmp");
