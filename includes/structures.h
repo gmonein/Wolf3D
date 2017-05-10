@@ -36,6 +36,7 @@ typedef struct		s_env
     SDL_Event		event;
     SDL_Cursor		*cursor;
 	SDL_Surface		**bmp;
+	SDL_Surface		**wall;
 	SDL_Renderer	*render;
 	SDL_Texture		*texture;
 	SDL_Surface		*sprite;
@@ -76,6 +77,10 @@ typedef struct		s_env
 
 	double			sprite_pos_x;
 	double			sprite_pos_y;
+
+	short			***scree_inf;
+	int				w_c;
+	int				lock;
 }                   t_env;
 
 #endif /* structures_h */

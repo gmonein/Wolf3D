@@ -16,6 +16,27 @@ int		get_pixel(SDL_Surface *src, int x, int y)
 	return (*((int *)(1 + src->pixels + y * src->pitch + (x << 2))));
 }
 
+void	print_map(t_env *env)
+{
+	int		i;
+	int		j;
+
+	i = 0;
+	while (++i < env->map_h)
+	{
+		j = 0;
+		while (++j < env->map_w)
+		{
+			if (j != env->map_w)
+				printf("%d ", env->map[i][j]);
+			else
+				printf("%d", env->map[i][j]);
+		}
+		printf("\n");
+		i++;
+	}
+}
+
 static int handle_events(t_env *env)
 {
 	int		act;
@@ -97,14 +118,47 @@ static int handle_events(t_env *env)
 						+ env->plane_y * cos(R_PAS);
 			act = 1;
 	}
+	if (env->key[SDL_SCANCODE_Q] == 1)
+		env->w_c = 1;
+	if (env->key[SDL_SCANCODE_E] == 1)
+		env->w_c = 2;
+	if (env->key[SDL_SCANCODE_Z] == 1)
+		env->w_c = 3;
+	if (env->key[SDL_SCANCODE_C] == 1)
+		env->w_c = 4;
+	if (env->key[SDL_SCANCODE_T] == 1)
+		env->w_c = 0;
+	if (env->key[SDL_SCANCODE_F] == 1 && env->lock == 0)
+	{
+		env->lock = 1;
+		print_map(env);
+	}
+	if (env->key[SDL_SCANCODE_G] == 1)
+		env->lock = 0;
 	return (act);
 }
 
 static int	global_loop(t_env *env)
 {
+	int		x;
+	int		y;
+	int		bx;
+	int		by;
 	while (env->run)
 	{
 		SDL_PollEvent(&env->event);
+		if (SDL_GetMouseState(&x, &y) && (SDL_BUTTON(SDL_BUTTON_LEFT) | SDL_BUTTON(SDL_BUTTON_RIGHT)) && bx != x && by != y)
+		{
+			bx = x;
+			by = y;
+	//		printf("%d %d\n", x, y);
+			if (env->scree_inf[y][x] != NULL && *env->scree_inf[y][x] != -1)
+			{
+	//			printf("current map -> %d\n", *env->scree_inf[y][x]);
+			if (SDL_BUTTON(SDL_BUTTON_LEFT))
+				*env->scree_inf[y][x] = env->w_c;
+			}
+		}
 		if (env->event.type == 256)
 			env->run = 0;
 		if (env->event.window.type == SDL_WINDOWEVENT_CLOSE
@@ -138,22 +192,47 @@ int		**init_int_ttab(int x, int y, int val)
 	int		i;
 	int		j;
 	int		**tab;
+	int		*line;
 
 	i = -1;
 	j = 0;
 	tab = (int **)malloc(sizeof(int) * x);
-	tab[0] = (int *)malloc(sizeof(int) * x * y);
+	line = (int *)malloc(sizeof(int) * x * y);
 	while (++i <= y)
 	{
-		tab[i] = &tab[0][j];
+		tab[i] = &line[j];
 		j += x;
 	}
 	i = -1;
 	j -= x;
 	while (++i < j)
-		tab[0][i] = val;
+		line[i] = val;
 	return (tab);
 }
+
+void	***init_int_tttab(int x, int y, void *val)
+{
+	int		i;
+	int		j;
+	void	**line;
+	void	***tab;
+
+	i = -1;
+	j = 0;
+	tab = (void ***)malloc(sizeof(void **) * x);
+	line = (void **)malloc(sizeof(void *) * x * y);
+	while (++i <= y)
+	{
+		tab[i] = &line[j];
+		j += x;
+	}
+	i = -1;
+	j -= x;
+	while (++i < j)
+		line[i] = val;
+	return (tab);
+}
+
 int main(int argc, char **argv)
 {
 	t_env	env;
@@ -161,20 +240,20 @@ int main(int argc, char **argv)
 	int		*pixels;
 
 	//INIT
-	env.cam.pos_x = 3;
-	env.cam.pos_y = 3;
-	env.dir_x = -1;
+	env.cam.pos_x = 8;
+	env.cam.pos_y = 16;
+	env.dir_x = -8;
 	env.dir_y = 0;
 	env.plane_x = 0;
-	env.plane_y = 0.66f;
-	env.x = 0;
-	env.y = 0;
+	env.plane_y = 5.33f;
 	env.run = 1;
 	env.pal = 0;
 	env.text = 1;
 	env.blur = 0;
+	env.lock = 0;
 	init_color(&env);
 	env.zbuffer = init_int_ttab(WIN_W, WIN_H, 42);
+	env.scree_inf = (short ***)init_int_tttab(WIN_W, WIN_H, NULL);
 	//THREAD INIT
 	if (argv[2] && atoi(argv[2]) > 0)
 		env.thread_cnt = atoi(argv[2]);
@@ -208,7 +287,20 @@ int main(int argc, char **argv)
 	env.map = parsing(argv[1], &env.map_h, &env.map_w);
 	env.key = SDL_GetKeyboardState(NULL);
 	env.bmp = (SDL_Surface **)malloc(sizeof(SDL_Surface *) * 4);
-	env.bmp[0] = IMG_Load("ressources/wall.png");
+	env.wall = (SDL_Surface **)malloc(sizeof(SDL_Surface *) * 4);
+	env.wall[0] = SDL_ConvertSurfaceFormat(
+				IMG_Load("ressources/wall_red.png"),
+				SDL_PIXELFORMAT_RGBA8888, 0);
+	env.wall[1] = SDL_ConvertSurfaceFormat(
+				IMG_Load("ressources/wall_green.png"),
+				SDL_PIXELFORMAT_RGBA8888, 0);
+	env.wall[2] = SDL_ConvertSurfaceFormat(
+				IMG_Load("ressources/wall_blue.png"),
+				SDL_PIXELFORMAT_RGBA8888, 0);
+	env.wall[3] = SDL_ConvertSurfaceFormat(
+				IMG_Load("ressources/wall_yellow.png"),
+				SDL_PIXELFORMAT_RGBA8888, 0);
+	env.bmp[0] = IMG_Load("ressources/wall_green.png");
 	env.bmp[0] = SDL_ConvertSurfaceFormat(env.bmp[0], SDL_PIXELFORMAT_RGBA8888, 0);
 	env.bmp[1] = SDL_LoadBMP("ressources/ground.bmp");
 	env.bmp[2] = IMG_Load("ressources/floor.png");

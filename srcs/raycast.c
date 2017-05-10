@@ -65,19 +65,19 @@ t_vector_inc		set_vector_by_y(t_vector_inc vec)
 		vec.dy * fabs(1 / vec.dy), 0});
 }
 
-
 void	set_ray(t_env *env, t_ray *ray, int x)
 {
-	ray->cam_x = 2 * x / (double)WIN_W - 1;
+	double		correct;
+
+	correct = 1;
+	ray->cam_x = 2 * x / (double)WIN_W;
+	ray->cam_x -= 1;
+//	ray->cam_x *= 8;
+//	correct = fabs(ray->cam_x / 32);
 	ray->pos_x = env->cam.pos_x;
 	ray->pos_y = env->cam.pos_y;
 	ray->dir_x = env->dir_x + ray->plane_x * ray->cam_x;
 	ray->dir_y = env->dir_y + ray->plane_y * ray->cam_x;
-	if (x == (int)WIN_W >> 1)
-	{
-		env->mid_dir_x = ray->dir_x;
-		env->mid_dir_y = ray->dir_y;
-	}
 	ray->map_x = (int)ray->pos_x;
 	ray->map_y = (int)ray->pos_y;
 	ray->delta_dist_x =
@@ -108,6 +108,14 @@ void	set_raystep(t_env *env, t_ray *ray)
 		ray->step_y = 1;
 		ray->side_y = (ray->map_y + 1.0f - ray->pos_y) * ray->delta_dist_y;
 	}
+}
+
+int		is_wall(int i)
+{
+	if (i == 3)
+		return (i);
+	else
+		return (0);
 }
 
 int		launch_ray(t_env *env, t_ray *ray)
@@ -146,9 +154,9 @@ void	get_wall_inf(t_env *env, t_ray *ray, int x)
 		ray->nside = 2;
 	else
 		ray->nside = 0;
-	ray->line_height = (int)(256 / ray->wall_dist);
-	ray->draw_start = -ray->line_height / 2 + (WIN_H / 4);
-	ray->draw_end = ray->line_height / 2 + (WIN_H / 4);
+	ray->line_height = (int)(512 / ray->wall_dist);
+	ray->draw_start = -ray->line_height / 2 + ((WIN_H / 4));
+	ray->draw_end = ray->line_height / 2 + ((WIN_H / 4));
 	ray->real_draw_end = ray->draw_end;
 	ray->real_draw_start = ray->draw_start;
 	if (ray->draw_start < 0)
@@ -264,12 +272,17 @@ void	print_wall_text(t_env *env, t_ray *ray, int x)
 	int			color;
 	int			fg;
 	char		alpha;
+	SDL_Surface	*text;
 
-	textx = (int)(ray->wallx * (double)((env->bmp[0]->w * 8))) % env->bmp[0]->w;
+	if (ray->hit > 0 && ray->hit <= 4)
+		text = env->wall[ray->hit - 1];
+	else
+		text = env->wall[0];
+	textx = (int)(ray->wallx * (double)((text->w))) % text->w;
 	if ((ray->side == 0) && ray->dir_x > 0)
-		textx = env->bmp[0]->w - textx - 1;
+		textx = text->w - textx - 1;
 	if ((ray->side == 1) && ray->dir_y < 0)
-		textx = env->bmp[0]->w - textx - 1;
+		textx = text->w - textx - 1;
 	y = (ray->real_draw_end - ray->real_draw_start) * 3 / 4 + ray->real_draw_start;
 	if (env->blur == 1)
 	{
@@ -283,11 +296,11 @@ void	print_wall_text(t_env *env, t_ray *ray, int x)
 	{
 		d = (y << 8) - ((int)WIN_H << 6)
 			+ ((int)ray->line_height << 7);
-		texty = ((d * env->bmp[0]->h) / ray->line_height) / 64;
-		texty %= env->bmp[0]->h;
-		color = get_pixel(env->bmp[0], textx, texty % env->bmp[0]->h);
+		texty = ((d * text->h) / ray->line_height) / 64;
+		texty %= text->h;
+		color = get_pixel(text, textx, texty % text->h);
 	//	color = blend((void *)&fg, (void *)&color);
-		color = blend((void *)&color, (void *)&env->pixels[x + y * (int)(WIN_W)]);
+	//	color = blend((void *)&color, (void *)&env->pixels[x + y * (int)(WIN_W)]);
 		if (env->zbuffer[y][x] > ray->wall_dist)
 		{
 			env->zbuffer[y][x] = ray->wall_dist;
@@ -343,8 +356,8 @@ void	draw_floor_text(t_env *env, t_ray *ray, int x)
 	int			color;
 	int			fg;
 	SDL_Surface	*text;
-;
 	int			tmp;
+	int			hit;
 	y = WIN_H / 4;
 	ray->dist_player = 0.0f;
 	set_side(ray);
@@ -355,7 +368,7 @@ void	draw_floor_text(t_env *env, t_ray *ray, int x)
 			text = env->bmp[3];
 		else
 			text = env->bmp[2];
-		ray->current_dist = 128 / (y * 2 - WIN_H / 2);
+		ray->current_dist = 256 / (y * 2 - WIN_H / 2);
 		ray->weight = (ray->current_dist - ray->dist_player)
 					/ (ray->wall_dist - ray->dist_player);
 		ray->current_floor_x =
@@ -363,15 +376,24 @@ void	draw_floor_text(t_env *env, t_ray *ray, int x)
 		ray->current_floor_y =
 			ray->weight * ray->floor_y_wall + (1.0 - ray->weight) * ray->pos_y;
 		if (((int)(ray->current_floor_x) > 0 && (int)ray->current_floor_y > 0)
-		&& (ray->current_floor_x < env->map_w && ray->current_floor_y < env->map_h)
-		&& (env->map[(int)ray->current_floor_y][(int)ray->current_floor_x] != 0))
+		&& ((int)ray->current_floor_x <= env->map_w && (int)ray->current_floor_y <= env->map_h)
+		&& ((int)ray->current_floor_y >= 0 && (int)ray->current_floor_x >= 0 && (int)ray->current_floor_x <= 256 && (int)ray->current_floor_y <= 256)
+		&& env->map[(int)ray->current_floor_y][(int)ray->current_floor_x] != 0)
 		{
-			text = env->bmp[0];
+			hit = env->map[(int)ray->current_floor_y][(int)ray->current_floor_x];
+			if (hit > 0 && hit < 5)
+				text = env->wall[hit - 1];
+			else
+				text = env->wall[0];
 			tmp = 1;
+			ray->floor_text_x =
+				abs((int)(ray->current_floor_x * 8 - 8)) % (text->w);
+			ray->floor_text_y =
+				abs((int)(ray->current_floor_y * 8 - 8)) % (text->h);
 		}
 		else
 		{
-			ray->current_dist = 256 / (y * 2 - WIN_H / 2);
+			ray->current_dist = 512 / (y * 2 - WIN_H / 2);
 			ray->weight = (ray->current_dist - ray->dist_player)
 						/ (ray->wall_dist - ray->dist_player);
 			ray->current_floor_x =
@@ -379,11 +401,11 @@ void	draw_floor_text(t_env *env, t_ray *ray, int x)
 			ray->current_floor_y =
 				ray->weight * ray->floor_y_wall + (1.0 - ray->weight) * ray->pos_y;
 
+			ray->floor_text_x =
+				abs((int)(ray->current_floor_x * 7.999 - 8)) % (text->w);
+			ray->floor_text_y =
+				abs((int)(ray->current_floor_y * 7.999 - 8)) % (text->h);
 		}
-		ray->floor_text_x =
-						abs((int)(ray->current_floor_x * 64 - 64)) % (text->w);
-		ray->floor_text_y =
-						abs((int)(ray->current_floor_y * 64 - 64)) % (text->h);
 		color = get_pixel(text, ray->floor_text_x, ray->floor_text_y);
 		if (env->blur == 1)
 		{
@@ -394,9 +416,13 @@ void	draw_floor_text(t_env *env, t_ray *ray, int x)
 			fg |= 0x00FFFFFF;
 			color = blend((void *)&fg, (void *)&color);
 		}
-		if (env->zbuffer[y - 1][x] == 42 || tmp == 1)
+		if (env->zbuffer[y][x] == 42 || tmp == 1)
 			px2img(env->pixels, color, x, y - 1);
-		env->zbuffer[y - 1][x] = 42;
+		if ((int)ray->current_floor_y >= 0 && (int)ray->current_floor_x >= 0 && (int)ray->current_floor_x <= 257 && (int)ray->current_floor_y <= 257)
+			env->scree_inf[y][x] = &env->map[(int)ray->current_floor_y][(int)ray->current_floor_x];
+		else
+			env->scree_inf[y][x] = NULL;
+		env->zbuffer[y][x] = 42;
 	}
 }
 
@@ -488,7 +514,7 @@ int		raycast(t_env *env, int start, int end)
 		ray.hit = launch_ray(env, &ray);
 		get_wall_inf(env, &ray, x);
 		print_wall_text(env, &ray, x);
-		while (ray.hit != -1)
+		while (ray.hit != -1 && env->text == 1)
 		{
 			ray.hit = launch_ray(env, &ray);
 			get_wall_inf(env, &ray, x);

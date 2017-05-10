@@ -1,6 +1,6 @@
 NAME = Wolf3D
 
-CPP = gcc
+CPP = clang
 
 SDLFLAGS = -framework SDL2 -framework SDL2_ttf -framework SDL2_image -F ./frameworks
 
