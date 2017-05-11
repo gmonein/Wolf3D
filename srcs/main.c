@@ -37,6 +37,31 @@ void	print_map(t_env *env)
 	}
 }
 
+void	ft_clear_zbuffer(t_env *env)
+{
+	int		i;
+	int		end;
+	int		val;
+
+	end = WIN_H * WIN_W;
+	i = 0;
+	val = INT_MAX;
+	while (i < end)
+	{
+		env->zbuffer[0][i] = val;
+		env->zbuffer[0][i + 1] = val;
+		env->zbuffer[0][i + 2] = val;
+		env->zbuffer[0][i + 3] = val;
+		env->zbuffer[0][i + 4] = val;
+		env->zbuffer[0][i + 5] = val;
+		env->zbuffer[0][i + 6] = val;
+		env->zbuffer[0][i + 7] = val;
+		env->zbuffer[0][i + 8] = val;
+		env->zbuffer[0][i + 9] = val;
+		i += 10;
+	}
+}
+
 static int handle_events(t_env *env)
 {
 	int		act;
@@ -167,7 +192,10 @@ static int	global_loop(t_env *env)
 				exit (1);
 		handle_events(env);
 		redraw(env);
-		draw_sprite(env);
+		draw_sprite(env, &env->sprite[0]);
+		draw_sprite(env, &env->sprite[1]);
+		draw_sprite(env, &env->sprite[2]);
+		ft_clear_zbuffer(env);
 		SDL_UpdateTexture(env->texture, NULL, env->pixels, (int)WIN_W << 2);
 		SDL_RenderCopy(env->render, env->texture, NULL, NULL);
 		SDL_RenderPresent(env->render);
@@ -196,8 +224,31 @@ int		**init_int_ttab(int x, int y, int val)
 
 	i = -1;
 	j = 0;
-	tab = (int **)malloc(sizeof(int) * x);
+	tab = (int **)malloc(sizeof(int *) * x);
 	line = (int *)malloc(sizeof(int) * x * y);
+	while (++i <= y)
+	{
+		tab[i] = &line[j];
+		j += x;
+	}
+	i = -1;
+	j -= x;
+	while (++i < j)
+		line[i] = val;
+	return (tab);
+}
+
+short	**init_short_ttab(int x, int y, int val)
+{
+	int		i;
+	int		j;
+	short	**tab;
+	short	*line;
+
+	i = -1;
+	j = 0;
+	tab = (short **)malloc(sizeof(short *) * x);
+	line = (short *)malloc(sizeof(short) * x * y);
 	while (++i <= y)
 	{
 		tab[i] = &line[j];
@@ -231,6 +282,46 @@ void	***init_int_tttab(int x, int y, void *val)
 	while (++i < j)
 		line[i] = val;
 	return (tab);
+}
+
+int		ft_get_block(int color)
+{
+	if (color == 0xFF6868F8)
+		return (3);
+	if (color == 0xFFF8F890)
+		return (4);
+	if (color == 0xFF60F860)
+		return (2);
+	if (color == 0xFFF84848)
+		return (1);
+	return (0);
+}
+
+short		**parsing_png(SDL_Surface *png, int *h, int *w)
+{
+	short	**map;
+	int		x;
+	int		y;
+
+	*h = png->h / 8;
+	*w = png->w / 8;
+	map = (short **)init_short_ttab(png->w / 8 + 2, png->h / 8 + 2, -1);
+	y = 0;
+	while (++y <= png->h / 8)
+	{
+		x = 0;
+		while (++x <= png->w / 8)
+			map[y][x] = ft_get_block(get_pixel(png, x * 8 + 1 - 8, y * 8 + 1 - 8));
+	}
+	return (map);
+}
+
+void	init_sprite(t_env *env)
+{
+	env->sprite = (t_sprite *)malloc(sizeof(t_sprite) * 10);
+	env->sprite[2] = (t_sprite){env->bmp[SPRITE_TREE], -3, -8};
+	env->sprite[0] = (t_sprite){env->bmp[SPRITE_TREE], 9, 9};
+	env->sprite[1] = (t_sprite){env->bmp[SPRITE_TREE], 29, 29};
 }
 
 int main(int argc, char **argv)
@@ -284,9 +375,8 @@ int main(int argc, char **argv)
 	SDL_SetRenderTarget(env.render, env.texture);
 
 	//WOLF INIT
-	env.map = parsing(argv[1], &env.map_h, &env.map_w);
 	env.key = SDL_GetKeyboardState(NULL);
-	env.bmp = (SDL_Surface **)malloc(sizeof(SDL_Surface *) * 4);
+	env.bmp = (SDL_Surface **)malloc(sizeof(SDL_Surface *) * 6);
 	env.wall = (SDL_Surface **)malloc(sizeof(SDL_Surface *) * 4);
 	env.wall[0] = SDL_ConvertSurfaceFormat(
 				IMG_Load("ressources/wall_red.png"),
@@ -307,11 +397,16 @@ int main(int argc, char **argv)
 	env.bmp[2] = SDL_ConvertSurfaceFormat(env.bmp[2], SDL_PIXELFORMAT_RGBA8888, 0);
 	env.bmp[3] = IMG_Load("ressources/grass.png");
 	env.bmp[3] = SDL_ConvertSurfaceFormat(env.bmp[3], SDL_PIXELFORMAT_RGBA8888, 0);
-	env.sprite = IMG_Load("ressources/kart_mario.png");
-	env.sprite = SDL_ConvertSurfaceFormat(env.sprite, SDL_PIXELFORMAT_RGBA8888, 0);
+	env.bmp[SPRITE_TREE] = SDL_ConvertSurfaceFormat(
+				IMG_Load("ressources/tree.png"),
+				SDL_PIXELFORMAT_RGBA8888, 0);
+	env.bmp[SPRITE_KART] = SDL_ConvertSurfaceFormat(
+				IMG_Load("ressources/kart_mario.png"),
+				SDL_PIXELFORMAT_RGBA8888, 0);
+	init_sprite(&env);
+	env.map = (short **)parsing_png(env.bmp[2], &env.map_h, &env.map_w);
+//	env.map = parsing(argv[1], &env.map_h, &env.map_w);
 	env.skybox = IMG_Load("ressources/skybox1.png");
 	env.skybox = SDL_ConvertSurfaceFormat(env.skybox, SDL_PIXELFORMAT_RGBA8888, 0);
-	env.sprite_pos_x = 3;
-	env.sprite_pos_y = 3;
     return (global_loop(&env));
 }

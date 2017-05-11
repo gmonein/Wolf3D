@@ -49,6 +49,7 @@ typedef struct		s_ray
 	int				draw_end;
 	int				real_draw_end;
 	int				real_draw_start;
+	int				real_dist;
 }					t_ray;
 
 t_vector_inc		set_vector_by_x(t_vector_inc vec)
@@ -154,9 +155,9 @@ void	get_wall_inf(t_env *env, t_ray *ray, int x)
 		ray->nside = 2;
 	else
 		ray->nside = 0;
-	ray->line_height = (int)(512 / ray->wall_dist);
-	ray->draw_start = -ray->line_height / 2 + ((WIN_H / 4));
-	ray->draw_end = ray->line_height / 2 + ((WIN_H / 4));
+	ray->line_height = (int)(256 / ray->wall_dist);
+	ray->draw_start = WIN_H / 4;//-ray->line_height / 2 + ((WIN_H / 4));
+	ray->draw_end = ray->line_height + ((WIN_H / 4));
 	ray->real_draw_end = ray->draw_end;
 	ray->real_draw_start = ray->draw_start;
 	if (ray->draw_start < 0)
@@ -292,7 +293,8 @@ void	print_wall_text(t_env *env, t_ray *ray, int x)
 		fg <<= 24;
 		fg |= 0x00FFFFFF;
 	}
-	while (++y < ray->draw_end)
+	y--;
+	while (++y <= ray->draw_end)
 	{
 		d = (y << 8) - ((int)WIN_H << 6)
 			+ ((int)ray->line_height << 7);
@@ -343,9 +345,10 @@ void	print_skybox(t_env *env, t_ray *ray, int x)
 	textx = 1.32 * env->skybox->w * radius / M_PI;
 	textx = textx >> 1;
 	y = 0;
-	while (y < WIN_H / 4)
+	while (y <= WIN_H / 4)
 	{
 		px2img(env->pixels, get_pixel(env->skybox, textx, (y * 1 / 7) % env->skybox->h), x, y);
+//		env->zbuffer[y][x] = INT_MAX;
 		y++;
 	}
 }
@@ -368,7 +371,7 @@ void	draw_floor_text(t_env *env, t_ray *ray, int x)
 			text = env->bmp[3];
 		else
 			text = env->bmp[2];
-		ray->current_dist = 256 / (y * 2 - WIN_H / 2);
+		ray->current_dist = (256 + 128) / (y * 2 - WIN_H / 2);
 		ray->weight = (ray->current_dist - ray->dist_player)
 					/ (ray->wall_dist - ray->dist_player);
 		ray->current_floor_x =
@@ -416,85 +419,13 @@ void	draw_floor_text(t_env *env, t_ray *ray, int x)
 			fg |= 0x00FFFFFF;
 			color = blend((void *)&fg, (void *)&color);
 		}
-		if (env->zbuffer[y][x] == 42 || tmp == 1)
+		if (env->zbuffer[y][x] == INT_MAX || tmp == 1)
 			px2img(env->pixels, color, x, y - 1);
 		if ((int)ray->current_floor_y >= 0 && (int)ray->current_floor_x >= 0 && (int)ray->current_floor_x <= 257 && (int)ray->current_floor_y <= 257)
 			env->scree_inf[y][x] = &env->map[(int)ray->current_floor_y][(int)ray->current_floor_x];
 		else
 			env->scree_inf[y][x] = NULL;
-		env->zbuffer[y][x] = 42;
-	}
-}
-
-void	draw_sprite(t_env *env)
-{
-	double		sprite_dist;
-	double		sprite_x;
-	double		sprite_y;
-
-	double		invdet;
-	double		transform_x;
-	double		transform_y;
-
-	int			sprite_screen_x;
-
-	int			sprite_height;
-	int			sprite_width;
-	int			draw_start_x;
-	int			draw_end_x;
-	int			draw_start_y;
-	int			draw_end_y;
-	int			text_x;
-	int			text_y;
-
-	sprite_dist = ((env->cam.pos_x - env->sprite_pos_x) * (env->cam.pos_x - env->sprite_pos_x)
-				+ (env->cam.pos_y - env->sprite_pos_y) * (env->cam.pos_y - env->sprite_pos_y));
-	sprite_x = env->sprite_pos_x - env->cam.pos_x;
-	sprite_y = env->sprite_pos_y - env->cam.pos_y;
-
-	invdet = 1.0 / (env->dir_y * env->plane_x - env->dir_x * env->plane_y);
-
-	transform_x = invdet * (env->dir_y * sprite_x - env->dir_x * sprite_y);
-	transform_y = invdet * (-env->plane_y * sprite_x + env->plane_x * sprite_y);
-
-	sprite_screen_x = (int)((WIN_W / 2) * (1 + transform_x / transform_y));
-
-	sprite_height = abs((int)(WIN_H / transform_y));
-	draw_start_y = -sprite_height / 2 + WIN_H / 2;
-	if (draw_start_y < 0)
-		draw_start_y = 0;
-	draw_end_y = sprite_height / 2 + WIN_H / 2;
-	if (draw_end_y >= WIN_H)
-		draw_end_y = WIN_H - 1;
-
-	sprite_width = abs((int)(WIN_H / transform_y));
-	draw_start_x = -sprite_width / 2 + sprite_screen_x;
-	if (draw_start_x < 0)
-		draw_start_x = 0;
-	draw_end_x = sprite_width / 2 + sprite_screen_x;
-	if (draw_end_x >= WIN_W)
-		draw_end_x = WIN_W - 1;
-
-	int			i;
-	int			y;
-	int			d;
-	int			color;
-	int			pix;;
-	i = draw_start_x - 1;
-	while (++i < draw_end_x)
-	{
-		text_x = (int)(256 * (i - (-sprite_width / 2 + sprite_screen_x))
-								* env->sprite->w / sprite_width) / 256;
-		y = draw_start_y - 1;
-		if (transform_y > 0 && i > 0 && i < WIN_W && transform_y < env->zbuffer[0][i])
-			while (++y < draw_end_y)
-			{
-				d = y * 256 - WIN_H * 128 + sprite_height * 128;
-				text_y = ((d * env->sprite->h) / sprite_height) / 256;
-				color = get_pixel(env->sprite, text_x, text_y /*% env->sprite->h*/);
-				color = blend((void *)&color, (void *)&env->pixels[i + y * (int)(WIN_W)]);
-				px2img(env->pixels, color, i, y);
-			}
+//		env->zbuffer[y][x] = INT_MAX;
 	}
 }
 

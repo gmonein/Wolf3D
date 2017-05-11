@@ -19,7 +19,8 @@ SOURCES = main.c \
 		raycast.c \
 		filler.c \
 		ft_fill_area.c \
-		thread.c
+		thread.c \
+		sprite.c
 
 DIR_O = obj
 

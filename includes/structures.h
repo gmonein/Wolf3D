@@ -4,6 +4,9 @@
 
 # include "rt.h"
 
+# define SPRITE_TREE 4
+# define SPRITE_KART 5
+
 typedef struct		s_args
 {
 	struct s_env	*env;
@@ -30,6 +33,14 @@ typedef struct		s_player
 	double			ray_y;
 }					t_player;
 
+typedef	struct		s_sprite
+{
+	SDL_Surface		*img;
+	int				pos_x;
+	int				pos_y;
+	double			sprite_dist;
+}					t_sprite;
+
 typedef struct		s_env
 {
     SDL_Window		*win;
@@ -39,10 +50,9 @@ typedef struct		s_env
 	SDL_Surface		**wall;
 	SDL_Renderer	*render;
 	SDL_Texture		*texture;
-	SDL_Surface		*sprite;
 	SDL_Surface		*screen;
+	t_sprite		*sprite;
 	int				**zbuffer;
-	//double			*zbuffer;
 	int				*pixels;
 	SDL_Surface		*skybox;
 	pthread_t		**thread;
@@ -51,11 +61,9 @@ typedef struct		s_env
 	short			pal;
 	short			text;
 	short			blur;
-
 	short			**map;
 	int				map_h;
 	int				map_w;
-
 	double			dir_x;
 	double			old_dir_x;
 	double			dir_y;
@@ -74,10 +82,6 @@ typedef struct		s_env
 	time_t			time;
 	time_t			oldtime;
 	struct tm		mytime;
-
-	double			sprite_pos_x;
-	double			sprite_pos_y;
-
 	short			***scree_inf;
 	int				w_c;
 	int				lock;
