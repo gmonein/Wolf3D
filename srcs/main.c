@@ -153,15 +153,37 @@ static int handle_events(t_env *env)
 		env->w_c = 4;
 	if (env->key[SDL_SCANCODE_T] == 1)
 		env->w_c = 0;
-	if (env->key[SDL_SCANCODE_F] == 1 && env->lock == 0)
-	{
-		env->lock = 1;
-		print_map(env);
-	}
+	if (env->key[SDL_SCANCODE_F] == 1)
+		env->w_c = 5;
 	if (env->key[SDL_SCANCODE_G] == 1)
-		env->lock = 0;
+		env->w_c = 6;
 	return (act);
 }
+
+void		draw_all_sprite(t_env *env)
+{
+	t_s_list	*lst;
+
+	lst = env->list_sprite;
+	while (lst->next)
+	{
+		lst = lst->next;
+		draw_sprite(env, &lst->sprite);
+	}
+}
+
+void	create_node(t_s_list *lst, t_sprite sprite)
+{
+	if (lst)
+	{
+		while (lst->next)
+			lst = lst->next;
+		lst->next = (t_s_list *)malloc(sizeof(t_s_list));
+		lst->next->sprite = sprite;
+		lst->next->next = NULL;
+	}
+}
+
 
 static int	global_loop(t_env *env)
 {
@@ -169,6 +191,9 @@ static int	global_loop(t_env *env)
 	int		y;
 	int		bx;
 	int		by;
+	t_s_list	*lst;
+
+	lst = env->list_sprite;
 	while (env->run)
 	{
 		SDL_PollEvent(&env->event);
@@ -176,12 +201,11 @@ static int	global_loop(t_env *env)
 		{
 			bx = x;
 			by = y;
-	//		printf("%d %d\n", x, y);
-			if (env->scree_inf[y][x] != NULL && *env->scree_inf[y][x] != -1)
-			{
-	//			printf("current map -> %d\n", *env->scree_inf[y][x]);
-			if (SDL_BUTTON(SDL_BUTTON_LEFT))
+			if (SDL_BUTTON(SDL_BUTTON_LEFT) && env->w_c != 5)
 				*env->scree_inf[y][x] = env->w_c;
+			if (SDL_BUTTON(SDL_BUTTON_LEFT) && env->w_c == 5)
+			{
+				create_node(lst, (t_sprite){env->bmp[SPRITE_TREE], env->pos_in_map_x[y][x], env->pos_in_map_y[y][x]});
 			}
 		}
 		if (env->event.type == 256)
@@ -190,12 +214,10 @@ static int	global_loop(t_env *env)
 			|| env->event.key.keysym.sym == SDLK_ESCAPE
 			|| env->event.type == SDL_QUIT)
 				exit (1);
+		ft_clear_zbuffer(env);
 		handle_events(env);
 		redraw(env);
-		draw_sprite(env, &env->sprite[0]);
-		draw_sprite(env, &env->sprite[1]);
-		draw_sprite(env, &env->sprite[2]);
-		ft_clear_zbuffer(env);
+		draw_all_sprite(env);
 		SDL_UpdateTexture(env->texture, NULL, env->pixels, (int)WIN_W << 2);
 		SDL_RenderCopy(env->render, env->texture, NULL, NULL);
 		SDL_RenderPresent(env->render);
@@ -226,6 +248,29 @@ int		**init_int_ttab(int x, int y, int val)
 	j = 0;
 	tab = (int **)malloc(sizeof(int *) * x);
 	line = (int *)malloc(sizeof(int) * x * y);
+	while (++i <= y)
+	{
+		tab[i] = &line[j];
+		j += x;
+	}
+	i = -1;
+	j -= x;
+	while (++i < j)
+		line[i] = val;
+	return (tab);
+}
+
+double		**init_double_ttab(int x, int y, double val)
+{
+	int		i;
+	int		j;
+	double	**tab;
+	double	*line;
+
+	i = -1;
+	j = 0;
+	tab = (double **)malloc(sizeof(double *) * x);
+	line = (double *)malloc(sizeof(double) * x * y);
 	while (++i <= y)
 	{
 		tab[i] = &line[j];
@@ -316,14 +361,6 @@ short		**parsing_png(SDL_Surface *png, int *h, int *w)
 	return (map);
 }
 
-void	init_sprite(t_env *env)
-{
-	env->sprite = (t_sprite *)malloc(sizeof(t_sprite) * 10);
-	env->sprite[2] = (t_sprite){env->bmp[SPRITE_TREE], -3, -8};
-	env->sprite[0] = (t_sprite){env->bmp[SPRITE_TREE], 9, 9};
-	env->sprite[1] = (t_sprite){env->bmp[SPRITE_TREE], 29, 29};
-}
-
 int main(int argc, char **argv)
 {
 	t_env	env;
@@ -331,6 +368,8 @@ int main(int argc, char **argv)
 	int		*pixels;
 
 	//INIT
+	env.list_sprite = (t_s_list *)malloc(sizeof(t_s_list));
+	env.list_sprite->next = NULL;
 	env.cam.pos_x = 8;
 	env.cam.pos_y = 16;
 	env.dir_x = -8;
@@ -344,6 +383,8 @@ int main(int argc, char **argv)
 	env.lock = 0;
 	init_color(&env);
 	env.zbuffer = init_int_ttab(WIN_W, WIN_H, 42);
+	env.pos_in_map_x = init_double_ttab(WIN_W, WIN_H, INT_MAX);
+	env.pos_in_map_y = init_double_ttab(WIN_W, WIN_H, INT_MAX);
 	env.scree_inf = (short ***)init_int_tttab(WIN_W, WIN_H, NULL);
 	//THREAD INIT
 	if (argv[2] && atoi(argv[2]) > 0)
@@ -403,7 +444,6 @@ int main(int argc, char **argv)
 	env.bmp[SPRITE_KART] = SDL_ConvertSurfaceFormat(
 				IMG_Load("ressources/kart_mario.png"),
 				SDL_PIXELFORMAT_RGBA8888, 0);
-	init_sprite(&env);
 	env.map = (short **)parsing_png(env.bmp[2], &env.map_h, &env.map_w);
 //	env.map = parsing(argv[1], &env.map_h, &env.map_w);
 	env.skybox = IMG_Load("ressources/skybox1.png");

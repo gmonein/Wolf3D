@@ -155,8 +155,12 @@ void	get_wall_inf(t_env *env, t_ray *ray, int x)
 		ray->nside = 2;
 	else
 		ray->nside = 0;
+	ray->real_dist =
+		pow(ray->map_x - ray->pos_x, 2)
+		+
+		pow(ray->map_y - ray->pos_y, 2);
 	ray->line_height = (int)(256 / ray->wall_dist);
-	ray->draw_start = WIN_H / 4;//-ray->line_height / 2 + ((WIN_H / 4));
+	ray->draw_start = WIN_H / 4;
 	ray->draw_end = ray->line_height + ((WIN_H / 4));
 	ray->real_draw_end = ray->draw_end;
 	ray->real_draw_start = ray->draw_start;
@@ -303,9 +307,9 @@ void	print_wall_text(t_env *env, t_ray *ray, int x)
 		color = get_pixel(text, textx, texty % text->h);
 	//	color = blend((void *)&fg, (void *)&color);
 	//	color = blend((void *)&color, (void *)&env->pixels[x + y * (int)(WIN_W)]);
-		if (env->zbuffer[y][x] > ray->wall_dist)
+		if (env->zbuffer[y][x] > ray->real_dist)
 		{
-			env->zbuffer[y][x] = ray->wall_dist;
+			env->zbuffer[y][x] = ray->real_dist;
 			px2img(env->pixels, color, x, y);
 		}
 	}
@@ -393,6 +397,10 @@ void	draw_floor_text(t_env *env, t_ray *ray, int x)
 				abs((int)(ray->current_floor_x * 8 - 8)) % (text->w);
 			ray->floor_text_y =
 				abs((int)(ray->current_floor_y * 8 - 8)) % (text->h);
+			env->zbuffer[y][x] =
+				pow(env->cam.pos_x - ray->current_floor_x, 2)
+				+
+				pow(env->cam.pos_y - ray->current_floor_y, 2);
 		}
 		else
 		{
@@ -422,10 +430,13 @@ void	draw_floor_text(t_env *env, t_ray *ray, int x)
 		if (env->zbuffer[y][x] == INT_MAX || tmp == 1)
 			px2img(env->pixels, color, x, y - 1);
 		if ((int)ray->current_floor_y >= 0 && (int)ray->current_floor_x >= 0 && (int)ray->current_floor_x <= 257 && (int)ray->current_floor_y <= 257)
+		{
 			env->scree_inf[y][x] = &env->map[(int)ray->current_floor_y][(int)ray->current_floor_x];
+		}
 		else
 			env->scree_inf[y][x] = NULL;
-//		env->zbuffer[y][x] = INT_MAX;
+		env->pos_in_map_x[y][x] = ray->current_floor_x;
+		env->pos_in_map_y[y][x] = ray->current_floor_y;
 	}
 }
 

@@ -7,6 +7,7 @@
 # define SPRITE_TREE 4
 # define SPRITE_KART 5
 
+
 typedef struct		s_args
 {
 	struct s_env	*env;
@@ -36,10 +37,16 @@ typedef struct		s_player
 typedef	struct		s_sprite
 {
 	SDL_Surface		*img;
-	int				pos_x;
-	int				pos_y;
+	double			pos_x;
+	double			pos_y;
 	double			sprite_dist;
 }					t_sprite;
+
+typedef struct		s_s_list
+{
+	struct s_sprite		sprite;
+	struct s_s_list	*next;
+}					t_s_list;
 
 typedef struct		s_env
 {
@@ -51,7 +58,7 @@ typedef struct		s_env
 	SDL_Renderer	*render;
 	SDL_Texture		*texture;
 	SDL_Surface		*screen;
-	t_sprite		*sprite;
+	t_s_list			*list_sprite;
 	int				**zbuffer;
 	int				*pixels;
 	SDL_Surface		*skybox;
@@ -83,6 +90,8 @@ typedef struct		s_env
 	time_t			oldtime;
 	struct tm		mytime;
 	short			***scree_inf;
+	double			**pos_in_map_x;
+	double			**pos_in_map_y;
 	int				w_c;
 	int				lock;
 }                   t_env;
