@@ -45,7 +45,8 @@ typedef	struct		s_sprite
 typedef struct		s_s_list
 {
 	struct s_sprite		sprite;
-	struct s_s_list	*next;
+	struct s_s_list		*next;
+	struct s_s_list		*past;
 }					t_s_list;
 
 typedef struct		s_env
@@ -92,6 +93,7 @@ typedef struct		s_env
 	short			***scree_inf;
 	double			**pos_in_map_x;
 	double			**pos_in_map_y;
+	t_s_list			***sprite_in_screen;
 	int				w_c;
 	int				lock;
 }                   t_env;

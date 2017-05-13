@@ -4,6 +4,69 @@
 #define D_PAS 0.075f
 #define R_PAS 0.05f
 
+double	ft_dtoa(char *str)
+{
+	double	res;
+	int		s;
+	int		i;
+
+	res = 0;
+	i = 0;
+	s = (*str == '-' && ++str ? -1 : 1);
+	while (ft_isdigit(*str) && *str != '.')
+	{
+		res = res * 10 + *str - '0';
+		str++;
+	}
+	if (*str)
+		str++;
+	while (ft_isdigit(*str))
+	{
+		res = res * 10 + *str - '0';
+		str++;
+		i++;
+	}
+	res /= pow(10, i);
+	return (res * s);
+}
+
+t_sprite	sprite_pars_line(t_env *env, char *str)
+{
+	t_sprite	spr;
+	int			i;
+
+	i = 0;
+	if (ft_strncmp("TREE", str, 4) == 0)
+		spr.img = env->bmp[4];
+	else
+		spr.img = NULL;
+	while (ft_isdigit(str[i]) == 0 && str[i] != '-')
+		i++;
+	spr.pos_x = ft_dtoa(&str[i]);
+	while (str[i] != ' ' && str[i])
+		i++;
+	i++;
+	spr.pos_y = ft_dtoa(&str[i]);
+	return (spr);
+}
+
+t_s_list	*pars_sprite(t_env *env, int fd)
+{
+	char		*line;
+	t_s_list	*lst;
+	t_sprite	sprite;
+
+	lst = (t_s_list *)malloc(sizeof(t_s_list));
+	lst->next = NULL;
+	while (get_next_line(fd, &line))
+	{
+		sprite = sprite_pars_line(env, line);
+		create_node(lst, sprite);
+		free(line);
+	}
+	return (lst);
+}
+
 int	SDL_EnableKeyRepeat(int a, int b);
 
 void	px2img(int *pixels, int clr, int x, int y)
@@ -58,8 +121,29 @@ void	ft_clear_zbuffer(t_env *env)
 		env->zbuffer[0][i + 7] = val;
 		env->zbuffer[0][i + 8] = val;
 		env->zbuffer[0][i + 9] = val;
+		env->sprite_in_screen[0][i] = NULL;
+		env->sprite_in_screen[0][i + 1] = NULL;
+		env->sprite_in_screen[0][i + 2] = NULL;
+		env->sprite_in_screen[0][i + 3] = NULL;
+		env->sprite_in_screen[0][i + 4] = NULL;
+		env->sprite_in_screen[0][i + 5] = NULL;
+		env->sprite_in_screen[0][i + 6] = NULL;
+		env->sprite_in_screen[0][i + 7] = NULL;
+		env->sprite_in_screen[0][i + 8] = NULL;
+		env->sprite_in_screen[0][i + 9] = NULL;
 		i += 10;
 	}
+}
+
+void	print_sprite_pos(t_s_list *begin)
+{
+	while (begin->next)
+	{
+		begin = begin->next;
+		if (begin->sprite.img != NULL)
+			printf("TREE %lf %lf\n", begin->sprite.pos_x, begin->sprite.pos_y);
+	}
+	printf("\n");
 }
 
 static int handle_events(t_env *env)
@@ -157,6 +241,8 @@ static int handle_events(t_env *env)
 		env->w_c = 5;
 	if (env->key[SDL_SCANCODE_G] == 1)
 		env->w_c = 6;
+	if (env->key[SDL_SCANCODE_H] == 1)
+		print_sprite_pos(env->list_sprite);
 	return (act);
 }
 
@@ -168,19 +254,35 @@ void		draw_all_sprite(t_env *env)
 	while (lst->next)
 	{
 		lst = lst->next;
-		draw_sprite(env, &lst->sprite);
+		if (lst->sprite.img != NULL)
+			draw_sprite(env, &lst->sprite, lst);
 	}
 }
 
 void	create_node(t_s_list *lst, t_sprite sprite)
 {
+	t_s_list		*tmp;
+
 	if (lst)
 	{
+		lst->past = NULL;
 		while (lst->next)
+		{
+			tmp = lst;
 			lst = lst->next;
+			lst->past = tmp;
+		}
 		lst->next = (t_s_list *)malloc(sizeof(t_s_list));
 		lst->next->sprite = sprite;
 		lst->next->next = NULL;
+	}
+}
+
+void	lst_del_node(t_s_list *node)
+{
+	if (node)
+	{
+		node->sprite.img = NULL;
 	}
 }
 
@@ -201,12 +303,15 @@ static int	global_loop(t_env *env)
 		{
 			bx = x;
 			by = y;
-			if (SDL_BUTTON(SDL_BUTTON_LEFT) && env->w_c != 5)
+			if (SDL_BUTTON(SDL_BUTTON_LEFT) && env->w_c < 5)
 				*env->scree_inf[y][x] = env->w_c;
 			if (SDL_BUTTON(SDL_BUTTON_LEFT) && env->w_c == 5)
-			{
 				create_node(lst, (t_sprite){env->bmp[SPRITE_TREE], env->pos_in_map_x[y][x], env->pos_in_map_y[y][x]});
-			}
+			if (SDL_BUTTON(SDL_BUTTON_LEFT) && env->w_c == 6)
+				if (env->sprite_in_screen[y][x] != NULL)
+				{
+					lst_del_node(env->sprite_in_screen[y][x]);
+				}
 		}
 		if (env->event.type == 256)
 			env->run = 0;
@@ -368,8 +473,8 @@ int main(int argc, char **argv)
 	int		*pixels;
 
 	//INIT
-	env.list_sprite = (t_s_list *)malloc(sizeof(t_s_list));
-	env.list_sprite->next = NULL;
+//	env.list_sprite = (t_s_list *)malloc(sizeof(t_s_list));
+//	env.list_sprite->next = NULL;
 	env.cam.pos_x = 8;
 	env.cam.pos_y = 16;
 	env.dir_x = -8;
@@ -386,6 +491,7 @@ int main(int argc, char **argv)
 	env.pos_in_map_x = init_double_ttab(WIN_W, WIN_H, INT_MAX);
 	env.pos_in_map_y = init_double_ttab(WIN_W, WIN_H, INT_MAX);
 	env.scree_inf = (short ***)init_int_tttab(WIN_W, WIN_H, NULL);
+	env.sprite_in_screen = (t_s_list ***)init_int_tttab(WIN_W, WIN_H, NULL);
 	//THREAD INIT
 	if (argv[2] && atoi(argv[2]) > 0)
 		env.thread_cnt = atoi(argv[2]);
@@ -416,6 +522,7 @@ int main(int argc, char **argv)
 	SDL_SetRenderTarget(env.render, env.texture);
 
 	//WOLF INIT
+
 	env.key = SDL_GetKeyboardState(NULL);
 	env.bmp = (SDL_Surface **)malloc(sizeof(SDL_Surface *) * 6);
 	env.wall = (SDL_Surface **)malloc(sizeof(SDL_Surface *) * 4);
@@ -448,5 +555,6 @@ int main(int argc, char **argv)
 //	env.map = parsing(argv[1], &env.map_h, &env.map_w);
 	env.skybox = IMG_Load("ressources/skybox1.png");
 	env.skybox = SDL_ConvertSurfaceFormat(env.skybox, SDL_PIXELFORMAT_RGBA8888, 0);
+	env.list_sprite = pars_sprite(&env, open("ressources/sprite.txt", O_RDONLY));
     return (global_loop(&env));
 }

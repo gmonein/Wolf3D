@@ -6,7 +6,7 @@
 /*   By: gmonein <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/05/04 19:13:29 by gmonein           #+#    #+#             */
-/*   Updated: 2017/05/12 18:45:57 by gmonein          ###   ########.fr       */
+/*   Updated: 2017/05/13 19:16:14 by gmonein          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,7 +67,7 @@ void	calc_sprite_inf(t_env *env, t_sprite *inf, t_sprite_inf *s)
 		s->draw_end_x = WIN_W - 1;
 }
 
-void	draw_sprite(t_env *env, t_sprite *inf)
+void	draw_sprite(t_env *env, t_sprite *inf, t_s_list *node)
 {
 	t_sprite_inf s;
 
@@ -92,7 +92,10 @@ void	draw_sprite(t_env *env, t_sprite *inf)
 				if (env->zbuffer[s.y][s.i] > inf->sprite_dist)
 				{
 					if ((get_pixel(inf->img, s.text_x, s.text_y) & 0xFF000000) == 0xFF000000)
+					{
 						env->zbuffer[s.y][s.i] = inf->sprite_dist;
+						env->sprite_in_screen[s.y][s.i] = node;
+					}
 					px2img(env->pixels, s.color, s.i, s.y);
 				}
 			}
