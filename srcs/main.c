@@ -109,7 +109,7 @@ void	ft_clear_zbuffer(t_env *env)
 	end = WIN_H * WIN_W;
 	i = 0;
 	val = INT_MAX;
-	while (i < end)
+	while (i + 10 < end)
 	{
 		env->zbuffer[0][i] = val;
 		env->zbuffer[0][i + 1] = val;
@@ -132,6 +132,12 @@ void	ft_clear_zbuffer(t_env *env)
 		env->sprite_in_screen[0][i + 8] = NULL;
 		env->sprite_in_screen[0][i + 9] = NULL;
 		i += 10;
+	}
+	while (i < end)
+	{
+		env->zbuffer[0][i] = val;
+		env->sprite_in_screen[0][i] = NULL;
+		i++;
 	}
 }
 
@@ -487,9 +493,9 @@ int main(int argc, char **argv)
 	env.blur = 0;
 	env.lock = 0;
 	init_color(&env);
-	env.zbuffer = init_int_ttab(WIN_W, WIN_H, 42);
-	env.pos_in_map_x = init_double_ttab(WIN_W, WIN_H, INT_MAX);
-	env.pos_in_map_y = init_double_ttab(WIN_W, WIN_H, INT_MAX);
+	env.zbuffer = init_int_ttab(WIN_W, WIN_H + 1, 42);
+	env.pos_in_map_x = init_double_ttab(WIN_W, WIN_H + 1, INT_MAX);
+	env.pos_in_map_y = init_double_ttab(WIN_W, WIN_H + 1, INT_MAX);
 	env.scree_inf = (short ***)init_int_tttab(WIN_W, WIN_H, NULL);
 	env.sprite_in_screen = (t_s_list ***)init_int_tttab(WIN_W, WIN_H, NULL);
 	//THREAD INIT

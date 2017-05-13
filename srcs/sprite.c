@@ -6,7 +6,7 @@
 /*   By: gmonein <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/05/04 19:13:29 by gmonein           #+#    #+#             */
-/*   Updated: 2017/05/13 19:16:14 by gmonein          ###   ########.fr       */
+/*   Updated: 2017/05/13 22:26:31 by gmonein          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,7 +83,7 @@ void	draw_sprite(t_env *env, t_sprite *inf, t_s_list *node)
 			s.text_x = inf->img->w - s.text_x;
 		s.y = s.draw_start_y - 1;
 		if (s.transform_y > 0 && s.i > 0 && s.i < WIN_W)
-			while (++s.y < s.draw_end_y)
+			while (++s.y <= s.draw_end_y)
 			{
 				s.d = s.y * 256 - (WIN_H * 64 - 5 * 256) + s.sprite_height * 128;
 				s.text_y = ((s.d * inf->img->h) / s.sprite_height) / 256;

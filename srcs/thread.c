@@ -6,7 +6,7 @@
 /*   By: gmonein <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/03/30 15:32:27 by gmonein           #+#    #+#             */
-/*   Updated: 2017/05/04 19:07:17 by gmonein          ###   ########.fr       */
+/*   Updated: 2017/05/13 22:39:49 by gmonein          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,9 +17,11 @@ pthread_t			**malloc_thread(int count, t_args *args, void *a)
 	pthread_t		**thread;
 	int				x;
 	int				x_inc;
+	int				ret;
 
 	x = 0;
 	x_inc = WIN_W / count;
+	ret = (int)WIN_W % count;
 	thread = (pthread_t **)malloc(sizeof(pthread_t *) * (count + 1));
 	thread[count] = NULL;
 	while (--count != -1)
@@ -27,8 +29,9 @@ pthread_t			**malloc_thread(int count, t_args *args, void *a)
 		thread[count] = (pthread_t *)malloc(sizeof(pthread_t));
 		args[count].env = a;
 		args[count].start = x;
-		args[count].end = x + x_inc;
-		x += x_inc;
+		args[count].end = x + x_inc + (ret > 0 ? 1 : 0);
+		x += x_inc + (ret > 0 ? 1 : 0);
+		ret--;
 	}
 	return (thread);
 }

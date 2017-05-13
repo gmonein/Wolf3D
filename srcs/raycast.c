@@ -166,8 +166,8 @@ void	get_wall_inf(t_env *env, t_ray *ray, int x)
 	ray->real_draw_start = ray->draw_start;
 	if (ray->draw_start < 0)
 		ray->draw_start = 0;
-	if (ray->draw_end >= (int)WIN_H)
-		ray->draw_end = (int)WIN_H - 1;
+	if (ray->draw_end > (int)WIN_H)
+		ray->draw_end = (int)WIN_H;
 	if (ray->side == 0 || ray->side == 2)
 		ray->wallx = ray->pos_y + ray->wall_dist * ray->dir_y;
 	else
@@ -368,7 +368,7 @@ void	draw_floor_text(t_env *env, t_ray *ray, int x)
 	y = WIN_H / 4;
 	ray->dist_player = 0.0f;
 	set_side(ray);
-	while (++y < WIN_H)
+	while (++y <= WIN_H)
 	{
 		tmp = 0;
 		if (y < ray->draw_end)
