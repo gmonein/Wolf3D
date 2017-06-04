@@ -6,7 +6,7 @@
 #    By: gmonein <gmonein@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2016/02/04 18:49:05 by bsouchet          #+#    #+#              #
-#    Updated: 2017/06/05 00:51:33 by gmonein          ###   ########.fr        #
+#    Updated: 2017/06/05 01:05:29 by gmonein          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -61,6 +61,6 @@ fclean: clean
 	rm -rf $(NAME)
 	make -C $(LIB) fclean
 
-re: clean fclean
+re: clean fclean all
 
 .PHONY: all $(NAME)

@@ -6,11 +6,28 @@
 /*   By: gmonein <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/02/09 15:59:27 by gmonein           #+#    #+#             */
-/*   Updated: 2017/06/05 00:52:41 by gmonein          ###   ########.fr       */
+/*   Updated: 2017/06/05 01:17:12 by gmonein          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "wolf.h"
+
+void		free_for_all(t_env *env)
+{
+	int		i;
+
+	i = -1;
+	free(env->map[0]);
+	free(env->map);
+	free(env->pixels);
+	SDL_DestroyRenderer(env->render);
+	SDL_DestroyWindow(env->win);
+	SDL_DestroyTexture(env->texture);
+	free(env->args);
+	while (++i < env->thread_cnt)
+		free(env->thread[i]);
+	free(env->thread);
+}
 
 static int	global_loop(t_env *env)
 {
@@ -22,7 +39,7 @@ static int	global_loop(t_env *env)
 		if (env->event.window.type == SDL_WINDOWEVENT_CLOSE
 				|| env->event.key.keysym.sym == SDLK_ESCAPE
 				|| env->event.type == SDL_QUIT)
-			exit(1);
+			env->run = 0;
 		handle_events(env);
 		redraw(env);
 		SDL_UpdateTexture(env->texture, NULL, env->pixels, (int)WIN_W << 2);
@@ -30,18 +47,9 @@ static int	global_loop(t_env *env)
 		SDL_RenderPresent(env->render);
 		env->key = SDL_GetKeyboardState(NULL);
 	}
+	free_for_all(env);
 	exit(1);
 	return (0);
-}
-
-void		init_color(t_env *env)
-{
-	env->color[0][0] = 0xDEE9ED;
-	env->color[0][1] = 0xC6C7CB;
-	env->color[0][2] = 0x808387;
-	env->color[0][3] = 0x71EBAF;
-	env->color[0][4] = 0x42A857;
-	env->color[0][5] = 0x332F3B;
 }
 
 int			init(t_env *env)
@@ -57,7 +65,12 @@ int			init(t_env *env)
 	env->run = 1;
 	env->pal = 0;
 	env->blur = 1;
-	init_color(env);
+	env->color[0][0] = 0xDEE9ED;
+	env->color[0][1] = 0xC6C7CB;
+	env->color[0][2] = 0x808387;
+	env->color[0][3] = 0x71EBAF;
+	env->color[0][4] = 0x42A857;
+	env->color[0][5] = 0x332F3B;
 	env->thread_cnt = 16;
 	if (!(env->args = (t_args *)malloc(sizeof(t_args) * (env->thread_cnt + 1))))
 		return (0);
