@@ -1,3 +1,15 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: gmonein <gmonein@student.42.fr>            +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2016/02/04 18:49:05 by bsouchet          #+#    #+#              #
+#    Updated: 2017/06/05 00:51:33 by gmonein          ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
 NAME = Wolf3D
 
 CPP = gcc
@@ -13,15 +25,18 @@ CFLAGS = -O3
 HEADER = includes
 
 SOURCES = main.c \
+		event.c \
 		parsing.c \
 		raycast.c \
-		filler.c \
-		ft_fill_area.c \
+		misc.c \
+		ray_misc.c \
 		thread.c
 
 DIR_O = obj
 
 DIR_S = srcs
+
+LIB = libft
 
 SRCS = $(addprefix $(DIR_S)/,$(SOURCES))
 OBJS = $(addprefix $(DIR_O)/,$(SOURCES:.c=.o))
@@ -29,15 +44,23 @@ OBJS = $(addprefix $(DIR_O)/,$(SOURCES:.c=.o))
 all: obj $(NAME)
 
 ${NAME}: $(OBJS)
-	${CPP} $(CFLAGS) -o $@ $^ libft/libft.a $(SDL2_P) $(SDLFLAGS) $(SDL2_HEADER)
+	make -C $(LIB)
+	${CPP} $(CFLAGS) -o $@ $^ -L $(LIB) $(SDL2_P) $(SDLFLAGS) $(SDL2_HEADER)
 
 $(DIR_O)/%.o: $(DIR_S)/%.c
-	$(CPP) $(CFLAGS) -I $(HEADER) -c -o $@ $<
+	$(CPP) $(CFLAGS) -I $(HEADER) $(SDL2_HEADER) -c -o $@ $<
 
 obj:
 	mkdir -p obj
 
-clean:	
+clean:
 	rm -rf obj
+	make -C $(LIB) clean
+
+fclean: clean
+	rm -rf $(NAME)
+	make -C $(LIB) fclean
+
+re: clean fclean
 
 .PHONY: all $(NAME)

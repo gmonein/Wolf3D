@@ -6,11 +6,11 @@
 /*   By: gmonein <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/03/30 15:32:27 by gmonein           #+#    #+#             */
-/*   Updated: 2017/04/02 03:02:21 by gmonein          ###   ########.fr       */
+/*   Updated: 2017/06/05 00:15:22 by gmonein          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "rt.h"
+#include "wolf.h"
 
 pthread_t			**malloc_thread(int count, t_args *args, void *a)
 {
@@ -32,7 +32,7 @@ pthread_t			**malloc_thread(int count, t_args *args, void *a)
 	}
 	return (thread);
 }
- 
+
 static void			*thread_fonc(void *b)
 {
 	raycast(

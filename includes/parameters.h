@@ -1,8 +1,0 @@
-
-#ifndef PARAMETERS_H
-# define PARAMETERS_H
-
-# define WIN_W		1200.0f
-# define WIN_H		800.0f
-
-#endif /* parameters_h */

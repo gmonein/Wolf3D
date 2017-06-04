@@ -1,22 +1,23 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   get_next_line.h                                    :+:      :+:    :+:   */
+/*   misc.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: gmonein <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2016/12/08 06:11:47 by gmonein           #+#    #+#             */
-/*   Updated: 2017/06/04 23:50:29 by gmonein          ###   ########.fr       */
+/*   Created: 2017/04/26 17:30:57 by gmonein           #+#    #+#             */
+/*   Updated: 2017/06/05 00:42:39 by gmonein          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef GET_NEXT_LINE_H
-# define GET_NEXT_LINE_H
+#include "wolf.h"
 
-# include "libft.h"
+void	px2img(int *pixels, int clr, int x, int y)
+{
+	pixels[(int)(WIN_W) * y + x] = clr;
+}
 
-# define BUFF_SIZE 3
-
-int				get_next_line(int const fd, char **line);
-
-#endif
+int		get_pixel(SDL_Surface *src, int x, int y)
+{
+	return (*((int *)(1 + src->pixels + y * src->pitch + (x << 2))));
+}

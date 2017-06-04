@@ -6,100 +6,44 @@
 /*   By: gmonein <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/04/26 17:30:57 by gmonein           #+#    #+#             */
-/*   Updated: 2017/04/26 17:48:57 by gmonein          ###   ########.fr       */
+/*   Updated: 2017/06/05 00:52:39 by gmonein          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "rt.h"
+#include "wolf.h"
 
-short		count_line(short fd)
+short	**init_int_ttab(int x, int y, int val)
 {
-	char	*line;
-	short		y;
+	int		i;
+	int		j;
+	short	**tab;
+	short	*line;
 
-	y = 1;
-	while (get_next_line(fd, &line) > 0)
-	{
-		free(line);
-		y++;
-	}
-	close(fd);
-	return (y);
-}
-
-short	len_line(char *str)
-{
-	short		len;
-	short		i;
-
-	len = 1;
-	i = 0;
-	while (str[i])
-	{
-		i++;
-		if (ft_isdigit(str[i - 1]) && str[i] == ' ')
-			len++;
-	}
-	return (len);
-}
-
-short	*pars_line(char *str, short *len)
-{
-	short		*tab;
-	short		i;
-
-	*len = len_line(str);
-	tab = (short *)malloc(sizeof(short) * (*len + 2));
-	tab[0] = -1;
-	i = 1;
-	while (*str && *str != '\n')
-	{
-		tab[i] = ft_atoi(str);
-		str++;
-		while (*str && ft_isdigit(*str))
-			str++;
-		while (*str && *str == ' ')
-			str++;
-		i++;
-	}
-	tab[i] = -1;
-	return (tab);
-}
-
-short		*set_border(short len)
-{
-	short		*line;
-	short		i;
-
-	line = (short *)malloc(sizeof(short) * (len + 2));
 	i = -1;
-	while (len + 2 > ++i)
-		line[i] = -1;
-	return (line);
+	j = 0;
+	tab = (short **)malloc(sizeof(short *) * x);
+	line = (short *)malloc(sizeof(short) * x * y);
+	while (++i <= y)
+	{
+		tab[i] = &line[j];
+		j += x;
+	}
+	i = -1;
+	j -= x;
+	while (++i < j)
+	{
+		if (i % x == 0 || i % x == 1 || i < x || i > (x - 1) * y)
+			line[i] = 1;
+		else
+			line[i] = (rand() % 5 == 4 ? 1 : 0);
+	}
+	return (tab);
 }
 
-short		**parsing(char *file)
+short	**parsing(void)
 {
-	short		fd;
-	short		y;
-	short		**tab;
-	short		i;
-	char		*line;
-	short		len;
+	short	**map;
 
-	y = count_line(open(file, O_RDONLY)) - 1;
-	tab = (short **)malloc(sizeof(short *) * (y + 2));
-	i = 1;
-	fd = open(file, O_RDONLY);
-	while (i < y + 1)
-	{
-		get_next_line(fd, &line);
-		tab[i] = pars_line(line, &len);
-		i++;
-		free(line);
-	}
-	tab[0] = set_border(len);
-	tab[y + 1] = set_border(len);
-	close(fd);
-	return (tab);
+	map = init_int_ttab(30, 30, 0);
+	return (map);
 }
